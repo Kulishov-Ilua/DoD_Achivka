@@ -58,6 +58,15 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(projects.shared)
+            implementation("io.ktor:ktor-client-core:3.0.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+            implementation("io.ktor:ktor-client-auth:3.0.0")
+
+
+            //implementation("io.ktor:ktor-client-cio:${libs.versions.ktor}")
+
+
+
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -94,7 +103,15 @@ android {
 }
 
 dependencies {
+    implementation(libs.firebase.crashlytics.buildtools)
+    implementation(libs.transport.runtime)
+    implementation(libs.androidx.material3.android)
+    implementation(libs.firebase.firestore.ktx)
+    //implementation(project(":composeApp"))
+    //implementation(project(":composeApp"))
     debugImplementation(compose.uiTooling)
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
 }
 
 compose.desktop {

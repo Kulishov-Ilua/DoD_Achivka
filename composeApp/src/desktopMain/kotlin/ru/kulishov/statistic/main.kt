@@ -1,5 +1,6 @@
 package ru.kulishov.statistic
 
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 
@@ -8,6 +9,13 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "Stata",
     ) {
-        App()
+        LazyColumn {
+            item{
+                shapkaDesctop()
+            }
+            item {
+                mainProfileDesctop(2, "Roman Ivanov", 1, 10,1)
+            }
+        }
     }
 }

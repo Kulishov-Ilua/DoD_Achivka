@@ -21,6 +21,7 @@ dependencies {
     //testImplementation(libs.ktor.server.tests)
     testImplementation(libs.kotlin.test.junit)
     implementation("io.ktor:ktor-server-auth:${libs.versions.ktor}")
+    implementation("io.ktor:ktor-server-cors:${libs.versions.ktor}")
     implementation("io.ktor:ktor-server-content-negotiation:${libs.versions.ktor}")
     implementation("io.ktor:ktor-serialization-kotlinx-json:${libs.versions.ktor}")
 }
