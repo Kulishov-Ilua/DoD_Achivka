@@ -3,6 +3,7 @@ package ru.kulishov.statistic
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +20,7 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +39,7 @@ import stata.composeapp.generated.resources.Res
 import stata.composeapp.generated.resources.elipse
 import stata.composeapp.generated.resources.man
 import stata.composeapp.generated.resources.woman
+import kotlin.coroutines.EmptyCoroutineContext
 
 
 var listMyTop by mutableStateOf( emptyList<Top>())
@@ -48,6 +51,7 @@ var listFriendAward by mutableStateOf( emptyList<UserAwardList>())
 var listMyThree by mutableStateOf( emptyList<Three>())
 var listFriendThree by mutableStateOf( emptyList<Three>())
 
+var topActive by  mutableStateOf(0)
 //=====================================================================================
 //profile block for desktop
 //Input values:
@@ -59,6 +63,7 @@ var listFriendThree by mutableStateOf( emptyList<Three>())
 //=====================================================================================
 @Composable
 fun mainProfileDesctop(sex:Int, name:String, three:Int, top:Int, award:Int){
+
     Box(Modifier.fillMaxWidth().height(700.dp).background(darkTheme.background), contentAlignment = Alignment.Center){
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.padding(end=110.dp).width(434.dp).height(434.dp), contentAlignment = Alignment.Center){
@@ -201,7 +206,10 @@ fun mainProfilePhone(sex:Int, name:String, three:Int, top:Int, award:Int){
 @Composable
 fun gameItemDesktop(name:String,description:String, color: Color){
 
-    Box(Modifier.width(400.dp).height(200.dp).background(color, shape = RoundedCornerShape(10))){
+    Box(Modifier.padding(start=25.dp)
+        .width(400.dp)
+        .height(200.dp)
+        .background(color, shape = RoundedCornerShape(10))){
         Column(Modifier.padding(25.dp),horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
@@ -248,9 +256,21 @@ fun gameItemPhone(name:String,description:String, color: Color){
 
 }
 
-
+//=====================================================================================
+//CompactProfile
+//Input values:
+//              key:String - user key
+//=====================================================================================
 @Composable
-fun CompactProfile(){
+fun CompactProfile(key:String){
+    listMyTop = emptyList()
+    listFriendTop = emptyList()
+
+    listMyAward = emptyList()
+    listFriendAward = emptyList()
+
+     listMyThree= emptyList()
+     listFriendThree = emptyList()
     var whoami by remember {
         mutableStateOf(
             WhoamiRequest(
@@ -265,8 +285,7 @@ fun CompactProfile(){
 
     }
      */
-    val server=server()
-    val key = server.authorization("test","1")
+
     if(key!=null){
         val newWhoami = server.whoamiRequest(key)
         if(newWhoami!=null) whoami=newWhoami
@@ -308,215 +327,228 @@ fun CompactProfile(){
         },
     ){*/
     Scaffold {
-        LazyColumn {
-            item {
-                mainProfilePhone(
-                    whoami.sex,
-                    whoami.username,
-                    whoami.myThree.size + whoami.inThree.size,
-                    whoami.myTop.size + whoami.inTop.size,
-                    whoami.myAward.size + whoami.inAward.size
-                )
-            }
-            item {
-                Box(
-                    Modifier.fillMaxWidth().height(254.dp).background(darkTheme.background)
-                ) {
-                    Column {
-                        Text(
-                            "Tops", style = TextStyle(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 24.sp,
-                                color = darkTheme.primary
-                            ), modifier = Modifier.padding(top = 25.dp, start = 25.dp)
-                        )
-
-                        LazyRow(Modifier.padding(start = 25.dp, top = 25.dp)) {
-                            if (whoami.myTop != null) {
-                                items(listMyTop) { myTop ->
-                                    gameItemPhone(
-                                        myTop.name,
-                                        myTop.description,
-                                        darkTheme.onPrimary
-                                    )
-                                }
-                            }
-                            if (whoami.inTop != null) {
-                                items(listFriendTop) { intop ->
-                                    gameItemPhone(
-                                        intop.name,
-                                        intop.description,
-                                        Color(122, 122, 122)
-                                    )
-                                }
-                            }
-                            item {
-                                val nC = Color(
-                                    darkTheme.secondary.red,
-                                    darkTheme.secondary.green,
-                                    darkTheme.secondary.blue,
-                                    alpha = 0.5f
-                                )
-                                Box(
-                                    Modifier.width(300.dp).height(150.dp)
-                                        .background(nC, shape = RoundedCornerShape(10)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        "Add", style = TextStyle(
-                                            fontSize = 24.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = darkTheme.primary
-                                        )
-                                    )
-                                }
-                            }
-                        }
-
-                    }
+        Column() {
+            shapkaPhone()
+            LazyColumn {
+                item {
+                    mainProfilePhone(
+                        whoami.sex,
+                        whoami.username,
+                        whoami.myThree.size + whoami.inThree.size,
+                        whoami.myTop.size + whoami.inTop.size,
+                        whoami.myAward.size + whoami.inAward.size
+                    )
                 }
-            }
-            item {
-                Box(
-                    Modifier.fillMaxWidth().height(254.dp).background(darkTheme.background)
-                ) {
-                    Column {
-                        Text(
-                            "Threes", style = TextStyle(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 24.sp,
-                                color = darkTheme.primary
-                            ), modifier = Modifier.padding(top = 25.dp, start = 25.dp)
-                        )
-
-                        LazyRow(Modifier.padding(start = 25.dp, top = 25.dp)) {
-                            if (whoami.myThree != null) {
-                                items(listMyThree) { myTop ->
-                                    gameItemPhone(
-                                        myTop.name,
-                                        myTop.description,
-                                        darkTheme.onPrimary
-                                    )
-                                }
-                            }
-                            if (whoami.inThree != null) {
-                                items(listFriendThree) { intop ->
-                                    gameItemPhone(
-                                        intop.name,
-                                        intop.description,
-                                        Color(122, 122, 122)
-                                    )
-                                }
-                            }
-                            item {
-                                val nC = Color(
-                                    darkTheme.secondary.red,
-                                    darkTheme.secondary.green,
-                                    darkTheme.secondary.blue,
-                                    alpha = 0.5f
-                                )
-                                Box(
-                                    Modifier.width(300.dp).height(150.dp)
-                                        .background(nC, shape = RoundedCornerShape(10)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        "Add", style = TextStyle(
-                                            fontSize = 24.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = darkTheme.primary
-                                        )
-                                    )
-                                }
-                            }
-                        }
-
-                    }
-                }
-            }
-            item {
-                Box(
-                    Modifier.fillMaxWidth().height(254.dp).background(darkTheme.background)
-                ) {
-                    Column {
-                        Text(
-                            "Awards", style = TextStyle(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 24.sp,
-                                color = darkTheme.primary
-                            ), modifier = Modifier.padding(top = 25.dp, start = 25.dp)
-                        )
-
-                        LazyRow(Modifier.padding(start = 25.dp, top = 25.dp)) {
-                            if (whoami.myAward != null) {
-                                items(listMyAward) { myTop ->
-                                    gameItemPhone(
-                                        myTop.name,
-                                        myTop.description,
-                                        darkTheme.onPrimary
-                                    )
-                                }
-                            }
-                            if (whoami.inAward != null) {
-                                items(listFriendAward) { intop ->
-                                    gameItemPhone(
-                                        intop.name,
-                                        intop.description,
-                                        Color(122, 122, 122)
-                                    )
-                                }
-                            }
-                            item {
-                                val nC = Color(
-                                    darkTheme.secondary.red,
-                                    darkTheme.secondary.green,
-                                    darkTheme.secondary.blue,
-                                    alpha = 0.5f
-                                )
-                                Box(
-                                    Modifier.width(300.dp).height(150.dp)
-                                        .background(nC, shape = RoundedCornerShape(10)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        "Add", style = TextStyle(
-                                            fontSize = 24.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = darkTheme.primary
-                                        )
-                                    )
-                                }
-                            }
-                        }
-
-                    }
-                }
-            }
-            item {
-                Box(
-                    Modifier.fillMaxWidth().height(100.dp).background(darkTheme.background),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row {
-                        Text(
-                            "DoD.", style = TextStyle(
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = darkTheme.primary
+                item {
+                    Box(
+                        Modifier.fillMaxWidth().height(254.dp).background(darkTheme.background)
+                    ) {
+                        Column {
+                            Text(
+                                "Tops", style = TextStyle(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 24.sp,
+                                    color = darkTheme.primary
+                                ), modifier = Modifier.padding(top = 25.dp, start = 25.dp)
                             )
-                        )
-                        Text(
-                            "stat", style = TextStyle(
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = darkTheme.secondary
-                            )
-                        )
+
+                            LazyRow(Modifier.padding(start = 25.dp, top = 25.dp)) {
+                                if (whoami.myTop != null) {
+                                    items(listMyTop) { myTop ->
+                                        Box(Modifier.clickable {
+                                            topActive=myTop.id
+                                            state=11
+                                        }) {
+                                            gameItemPhone(
+                                                myTop.name,
+                                                myTop.description,
+                                                darkTheme.onPrimary
+                                            )
+                                        }
+                                    }
+                                }
+                                if (whoami.inTop != null) {
+                                    items(listFriendTop) { intop ->
+                                        Box(Modifier.clickable {
+                                            topActive=intop.id
+                                            state=11
+                                        }) {
+                                            gameItemPhone(
+                                                intop.name,
+                                                intop.description,
+                                                Color(122, 122, 122)
+                                            )
+                                        }
+                                    }
+                                }
+                                item {
+                                    val nC = Color(
+                                        darkTheme.secondary.red,
+                                        darkTheme.secondary.green,
+                                        darkTheme.secondary.blue,
+                                        alpha = 0.5f
+                                    )
+                                    Box(
+                                        Modifier.width(300.dp).height(150.dp)
+                                            .background(nC, shape = RoundedCornerShape(10)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            "Add", style = TextStyle(
+                                                fontSize = 24.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = darkTheme.primary
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+
+                        }
                     }
-
                 }
-            }
+                item {
+                    Box(
+                        Modifier.fillMaxWidth().height(254.dp).background(darkTheme.background)
+                    ) {
+                        Column {
+                            Text(
+                                "Threes", style = TextStyle(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 24.sp,
+                                    color = darkTheme.primary
+                                ), modifier = Modifier.padding(top = 25.dp, start = 25.dp)
+                            )
 
+                            LazyRow(Modifier.padding(start = 25.dp, top = 25.dp)) {
+                                if (whoami.myThree != null) {
+                                    items(listMyThree) { myTop ->
+                                        gameItemPhone(
+                                            myTop.name,
+                                            myTop.description,
+                                            darkTheme.onPrimary
+                                        )
+                                    }
+                                }
+                                if (whoami.inThree != null) {
+                                    items(listFriendThree) { intop ->
+                                        gameItemPhone(
+                                            intop.name,
+                                            intop.description,
+                                            Color(122, 122, 122)
+                                        )
+                                    }
+                                }
+                                item {
+                                    val nC = Color(
+                                        darkTheme.secondary.red,
+                                        darkTheme.secondary.green,
+                                        darkTheme.secondary.blue,
+                                        alpha = 0.5f
+                                    )
+                                    Box(
+                                        Modifier.width(300.dp).height(150.dp)
+                                            .background(nC, shape = RoundedCornerShape(10)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            "Add", style = TextStyle(
+                                                fontSize = 24.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = darkTheme.primary
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
+                item {
+                    Box(
+                        Modifier.fillMaxWidth().height(254.dp).background(darkTheme.background)
+                    ) {
+                        Column {
+                            Text(
+                                "Awards", style = TextStyle(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 24.sp,
+                                    color = darkTheme.primary
+                                ), modifier = Modifier.padding(top = 25.dp, start = 25.dp)
+                            )
+
+                            LazyRow(Modifier.padding(start = 25.dp, top = 25.dp)) {
+                                if (whoami.myAward != null) {
+                                    items(listMyAward) { myTop ->
+                                        gameItemPhone(
+                                            myTop.name,
+                                            myTop.description,
+                                            darkTheme.onPrimary
+                                        )
+                                    }
+                                }
+                                if (whoami.inAward != null) {
+                                    items(listFriendAward) { intop ->
+                                        gameItemPhone(
+                                            intop.name,
+                                            intop.description,
+                                            Color(122, 122, 122)
+                                        )
+                                    }
+                                }
+                                item {
+                                    val nC = Color(
+                                        darkTheme.secondary.red,
+                                        darkTheme.secondary.green,
+                                        darkTheme.secondary.blue,
+                                        alpha = 0.5f
+                                    )
+                                    Box(
+                                        Modifier.width(300.dp).height(150.dp)
+                                            .background(nC, shape = RoundedCornerShape(10)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            "Add", style = TextStyle(
+                                                fontSize = 24.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = darkTheme.primary
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
+                item {
+                    Box(
+                        Modifier.fillMaxWidth().height(100.dp).background(darkTheme.background),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row {
+                            Text(
+                                "DoD.", style = TextStyle(
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = darkTheme.primary
+                                )
+                            )
+                            Text(
+                                "stat", style = TextStyle(
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = darkTheme.secondary
+                                )
+                            )
+                        }
+
+                    }
+                }
+
+            }
         }
     }
     //}
@@ -525,15 +557,37 @@ fun CompactProfile(){
 
 
 @Composable
-fun ExpandedProfile(){
-    val whoami = WhoamiRequest("Rowan Petrov", 1,10, emptyList(), emptyList(), emptyList(),
+fun ExpandedProfile(key:String){
+    listMyTop = emptyList()
+    listFriendTop = emptyList()
+
+    listMyAward = emptyList()
+    listFriendAward = emptyList()
+
+    listMyThree= emptyList()
+    listFriendThree = emptyList()
+    var whoami = WhoamiRequest("Rowan Petrov", 1,10, emptyList(), emptyList(), emptyList(),
         emptyList(), emptyList(), emptyList()
     )
+    if(key!=null){
+        val newWhoami = server.whoamiRequest(key)
+        if(newWhoami!=null) whoami=newWhoami
+    }
     if(whoami.myTop!=null){
-
+        for(x in whoami.myTop){
+            if(key!=null) {
+                var top = server.getTop(key, x)
+                if(top!=null) listMyTop+=top
+            }
+        }
     }
     if(whoami.inTop!=null){
-
+        for(x in whoami.inTop){
+            if(key!=null) {
+                var top = server.getTop(key, x)
+                if(top!=null) listFriendTop+=top
+            }
+        }
     }
     if(whoami.myThree!=null){
 
@@ -549,7 +603,7 @@ fun ExpandedProfile(){
     }
     LazyColumn() {
         item{
-            shapkaDesctop()
+            shapkaDesctop(darkTheme.background, darkTheme.primary, darkTheme.secondary)
         }
         item {
             mainProfileDesctop(whoami.sex, whoami.username, whoami.myThree.size+whoami.inThree.size, whoami.myTop.size+whoami.inTop.size,whoami.myAward.size+whoami.inAward.size)
@@ -566,12 +620,30 @@ fun ExpandedProfile(){
                     LazyRow(Modifier.padding(start=100.dp, top=80.dp)) {
                         if(whoami.myTop!=null) {
                             items(listMyTop) { myTop ->
-                                gameItemDesktop(myTop.name,myTop.description, darkTheme.onPrimary)
+                                Box(Modifier.clickable {
+                                    topActive=myTop.id
+                                    state=11
+                                }) {
+                                    gameItemDesktop(
+                                        myTop.name,
+                                        myTop.description,
+                                        darkTheme.onPrimary
+                                    )
+                                }
                             }
                         }
                         if(whoami.inTop!=null) {
                             items(listFriendTop) { intop ->
-                                gameItemDesktop(intop.name,intop.description, Color(122,122,122))
+                                Box(Modifier.clickable {
+                                    topActive=intop.id
+                                    state=11
+                                }) {
+                                    gameItemDesktop(
+                                        intop.name,
+                                        intop.description,
+                                        Color(122, 122, 122)
+                                    )
+                                }
                             }
                         }
                         item {

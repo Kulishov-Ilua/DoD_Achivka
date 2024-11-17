@@ -73,64 +73,73 @@ import stata.composeapp.generated.resources.elipse
 import stata.composeapp.generated.resources.exit
 import stata.composeapp.generated.resources.man
 import stata.composeapp.generated.resources.more
+import stata.composeapp.generated.resources.profile
 import stata.composeapp.generated.resources.woman
 
 
 
 var modalState by  mutableStateOf(false)
-
-
+var state by mutableStateOf(-1)
+var key by mutableStateOf("")
 
 //=====================================================================================
 //shapka for desktop
+//              backgroundColor:Color - background color
+//              primaryColor:Color - primary color
+//              themeColor:Color - theme color
 //=====================================================================================
 @Preview
 @Composable
-fun shapkaDesctop(){
-    Box(Modifier.fillMaxWidth().height(80.dp).background(color= darkTheme.background), contentAlignment = Alignment.CenterStart){
+fun shapkaDesctop(backgroundColor: Color,primaryColor:Color,themeColor:Color){
+    Box(Modifier.fillMaxWidth().height(80.dp).background(color= backgroundColor), contentAlignment = Alignment.CenterStart){
         Row(Modifier.padding(start=100.dp, end=100.dp), verticalAlignment = Alignment.CenterVertically){
             Text("DoD.", style = TextStyle(
                 fontSize = 36.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = darkTheme.primary
+                color = primaryColor
             ))
             Text("stat", style = TextStyle(
                 fontSize = 36.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = darkTheme.secondary
+                color = primaryColor
             ))
             Box(modifier = Modifier.padding(start=100.dp)){
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Home", style = TextStyle(
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Light,
-                        color = darkTheme.primary
+                        color = primaryColor
                     ), modifier = Modifier.padding(end = 27.dp))
                     Text("Top", style = TextStyle(
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Light,
-                        color = darkTheme.primary
-                    ), modifier = Modifier.padding(end = 27.dp, start=27.dp))
+                        color = if(state!=11) primaryColor else themeColor
+                    ), modifier = Modifier.padding(end = 27.dp, start=27.dp)
+                        .clickable { state=11 })
                     Text("Three", style = TextStyle(
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Light,
-                        color = darkTheme.primary
+                        color = primaryColor
                     ), modifier = Modifier.padding(end = 27.dp, start=27.dp))
                     Text("Award", style = TextStyle(
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Light,
-                        color = darkTheme.primary
+                        color = primaryColor
                     ), modifier = Modifier.padding(end = 27.dp, start=27.dp))
                     Text("Api", style = TextStyle(
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Light,
-                        color = darkTheme.primary
+                        color = primaryColor
                     ), modifier = Modifier.padding( start=27.dp))
 
                 }
             }
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd){
-                Icon(painter = painterResource(Res.drawable.more), contentDescription = "")
+            Box(Modifier.fillMaxWidth()
+                .clickable {
+                    state=1
+                }, contentAlignment = Alignment.CenterEnd){
+                Icon(painter = painterResource(Res.drawable.profile), contentDescription = "",
+                    tint =if(state!=1) primaryColor else themeColor )
             }
         }
     }
@@ -142,31 +151,31 @@ fun shapkaDesctop(){
 @Composable
 fun shapkaPhone(){
     Box(Modifier.fillMaxWidth().height(60.dp).background(color= darkTheme.background), contentAlignment = Alignment.Center){
-Row {
-    Text(
-        "DoD.", style = TextStyle(
-            fontSize = 24.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = darkTheme.primary
-        )
-    )
-    Text(
-        "stat", style = TextStyle(
-            fontSize = 24.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = darkTheme.secondary
-        )
-    )
-}
-            Box(Modifier.padding(end=15.dp).fillMaxWidth(), contentAlignment = Alignment.CenterEnd){
-                Icon(painter = painterResource(if(modalState) Res.drawable.exit else Res.drawable.more), contentDescription = "",
-                    tint = darkTheme.primary, modifier = Modifier.scale(0.7f).clickable{
-                        modalState=!modalState
-                    })
-            }
+        Row {
+            Text(
+                "DoD.", style = TextStyle(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = darkTheme.primary
+                )
+            )
+            Text(
+                "stat", style = TextStyle(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = darkTheme.secondary
+                )
+            )
+        }
+        Box(Modifier.padding(end=25.dp).fillMaxWidth(), contentAlignment = Alignment.CenterEnd){
+            Icon(painter = painterResource(if(modalState) Res.drawable.exit else Res.drawable.more), contentDescription = "",
+                tint = darkTheme.primary, modifier = Modifier.scale(0.6f).clickable{
+                    modalState=!modalState
+                })
+        }
     }
-}
 
+}
 
 @Composable
 fun phoneNavigateModuleSite(){

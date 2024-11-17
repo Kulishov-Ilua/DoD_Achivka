@@ -64,6 +64,7 @@ import stata.composeapp.generated.resources.more
 
 enum class WindowSizeClass { Compact, Medium, Expanded }
 
+
 // Функция для определения класса размеров экрана
 fun calculateWindowSizeClass(windowDpSize: DpSize): WindowSizeClass {
     return when {
@@ -84,7 +85,6 @@ fun rememberWindowSizeClass(): WindowSizeClass {
     return calculateWindowSizeClass(DpSize(windowWidthDp, 0.dp))
 }
 
-var state by mutableStateOf(1)
 
 
 
@@ -97,87 +97,21 @@ fun main() {
 
         val userAgent = window.navigator.userAgent.lowercase()
         if(userAgent.contains("mobile")||userAgent.contains("android")||userAgent.contains("iphone")){
-            Box(Modifier.fillMaxSize().background(darkTheme.background), contentAlignment = Alignment.Center) {
-                LazyColumn(Modifier.scale(0.9f)) {
-                    item {
-                        topElement(1, 1, 300,300, Color.White)
-                    }
-                    item {
-                        topElement(1, 2, 250,300, Color.White)
-                    }
-                    item {
-                        topElement(2, 3, 212,300, Color.White)
-                    }
-                    item {
-                        topElement(2, 4, 100,300, Color.White)
-                    }
-                    item {
-                        topElement(2, 5, 40,300, Color.White)
-                    }
-                    item {
-                        topElement(1, 6, 5,300, Color.White)
-                    }
-                }
-            }
-        //compactSite()
+            compactSite()
         }else{
-            Box(Modifier.fillMaxSize().background(darkTheme.background), contentAlignment = Alignment.Center) {
-                LazyColumn(Modifier.width(1000.dp)) {
-                    item {
-                        topElement(1, 1, 300,300, Color.White)
-                    }
-                    item {
-                        topElement(1, 2, 250,300, Color.White)
-                    }
-                    item {
-                        topElement(2, 3, 212,300, Color.White)
-                    }
-                    item {
-                        topElement(2, 4, 100,300, Color.White)
-                    }
-                    item {
-                        topElement(2, 5, 40,300, Color.White)
-                    }
-                    item {
-                        topElement(1, 6, 5,300, Color.White)
-                    }
-                }
-            }
-            //ExpandedProfile()
+            if(state==-1) authScreenDesktop(darkTheme.background, darkTheme.primary, darkTheme.secondary,
+                Color(32,32,32))
+            if(state==1) ExpandedProfile(key)
+            if(state==11) topScreenDesktop(key,
+                topActive,darkTheme.background, darkTheme.primary, darkTheme.secondary,Color(32,32,32),
+                darkTheme.onPrimary)
         }
     }
 }
 
 @Composable
 fun compactSite(){
-    var modalState by remember { mutableStateOf(false) }
     Column() {
-
-        Box(Modifier.fillMaxWidth().height(60.dp).background(color= darkTheme.background), contentAlignment = Alignment.Center){
-            Row {
-                Text(
-                    "DoD.", style = TextStyle(
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = darkTheme.primary
-                    )
-                )
-                Text(
-                    "stat", style = TextStyle(
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = darkTheme.secondary
-                    )
-                )
-            }
-            Box(Modifier.padding(end=25.dp).fillMaxWidth(), contentAlignment = Alignment.CenterEnd){
-                Icon(painter = painterResource(if(modalState) Res.drawable.exit else Res.drawable.more), contentDescription = "",
-                    tint = darkTheme.primary, modifier = Modifier.scale(0.6f).clickable{
-                        modalState=!modalState
-                    })
-            }
-        }
-
             if(modalState){
                 Box(modifier = Modifier.fillMaxSize().background(darkTheme.background), contentAlignment = Alignment.Center){
                     Column {
@@ -185,7 +119,9 @@ fun compactSite(){
                     }
                 }
             }else {
-                if (state == 1) CompactProfile()
+                if(state==-1) authScreenPhone(darkTheme.background, darkTheme.primary, darkTheme.secondary,
+                    Color(32,32,32))
+                if (state == 1) CompactProfile(key)
             }
 
     }

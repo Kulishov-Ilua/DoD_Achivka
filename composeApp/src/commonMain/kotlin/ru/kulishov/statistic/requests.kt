@@ -1,5 +1,6 @@
 package ru.kulishov.statistic
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -145,17 +146,20 @@ var userNameList = mutableListOf(
     Username(9,2,"Karenina A.A."),
 )
 
+
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //Top
 //Variables:
 //              id:Int - three id
 //              name:String - extr name
 //              description:String - description
+//              token:String - top token
 //              admin:Int - user id
 //              users:List<UserTop> - users
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @Serializable
-data class Top(val id:Int,val name:String, val description:String,val admin:UserTop,val users:List<UserTop>)
+data class Top(val id:Int, val name:String, val description:String, val token:String, val admin:UserTop,
+               var users:List<UserTop>)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //UserTop
@@ -164,11 +168,11 @@ data class Top(val id:Int,val name:String, val description:String,val admin:User
 //              value:Int - user value
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @Serializable
-data class UserTop(val user:Int,val value:Int)
+data class UserTop(val user:Int, var value:Int)
 var threeList = emptyList<Three>()
 var awardList = emptyList<UserAwardList>()
 var topList = listOf(
-    Top(0,"Test top", "просто какое-то описание топа. Что-то же нужно написать", UserTop(0,0), listOf(
+    Top(0,"Test top", "просто какое-то описание топа. Что-то же нужно написать","sjklfjsklj943ls", UserTop(0,0), listOf(
         UserTop(1, 999),
         UserTop(2, 800),
         UserTop(3, 650),
@@ -222,7 +226,8 @@ var userList = mutableListOf(
 @Serializable
 data class WhoamiRequest(var username:String, var sex:Int, var plan:Int, var myThree:List<Int>, var inThree:List<Int>, var myTop:List<Int>, var inTop:List<Int>, var myAward:List<Int>, var inAward:List<Int>){
 }
-class server:serverEmulator{}
+class serverE:serverEmulator{}
+val server=serverE()
 public interface serverEmulator{
     //=====================================================================================
     //getId
@@ -323,6 +328,128 @@ public interface serverEmulator{
                 }
             }else return null
         }else return null
+    }
+    //=====================================================================================
+    //getAward
+    //Input values:
+    //              key:String - user key
+    //              idAward:Int - award id
+    //Output values:
+    //              award:UserAwardList? - award list
+    //=====================================================================================
+    fun getAward(key:String, idAward:Int):UserAwardList?{
+        var userId = getId(key)
+        if(userId!=null){
+            val award = awardList.find { cr-> cr.id==idAward }
+            if(award!=null){
+                if(award.admin==userId){
+                    return award
+                }else{
+                    if(award.users.contains(userId)) return award
+                    else return null
+                }
+            }else return null
+        }else return null
+    }
+    //=====================================================================================
+    //getThree
+    //Input values:
+    //              key:String - user key
+    //              idThree:Int - three id
+    //Output values:
+    //              Three:Three? - three
+    //=====================================================================================
+    fun getThree(key:String, idThree:Int):Three?{
+        var userId = getId(key)
+        if(userId!=null){
+            val three = threeList.find { cr-> cr.id==idThree }
+            if(three!=null){
+                if(three.admin==userId){
+                    return three
+                }else{
+                    if(three.users.contains(userId)) return three
+                    else return null
+                }
+            }else return null
+        }else return null
+    }
+    //=====================================================================================
+    //getUsernameList
+    //Input values:
+    //              userIdList:List<Int> - users id list
+    //Output values:
+    //              usernames:List<Username> - usernames list
+    //=====================================================================================
+    fun getUsernameList(userIdList:List<Int>):List<Username>{
+        var usernames = emptyList<Username>()
+        for(x in userIdList){
+            val user = userNameList.find { cr-> cr.userId==x }
+            if(user!=null) usernames+=user
+        }
+        return usernames
+    }
+    //=====================================================================================
+    //checkAdminTop
+    //Input values:
+    //              topId:Int - id top
+    //              key:String - user key
+    //Output values:
+    //              ret:Boolean - result
+    //=====================================================================================
+    fun checkAdminTop(topId:Int,key:String):Boolean{
+        val top = topList.find { cr-> cr.id==topId }
+        if(top!=null){
+            if(top.admin.user==getId(key)) return true
+            else return false
+        }else return false
+    }
+    //=====================================================================================
+    //getTopToken
+    //Input values:
+    //              key:String - user key
+    //              topId:Int - top id
+    //Output values:
+    //              token:String? - token
+    //=====================================================================================
+    fun getTopToken(key:String,topId:Int):String?{
+        val top = topList.find { cr-> cr.id==topId }
+        if(top!=null){
+            if(top.admin.user==getId(key)) return top.token
+            else return null
+        }else return null
+    }
+    //=====================================================================================
+    //kickUpUser
+    //Input values:
+    //              key:String - user key
+    //              topId:Int - top id
+    //              userId:Int - user id
+    //=====================================================================================
+    fun kickUpUser(key:String,topId:Int,userId:Int){
+        val top = topList.find { cr-> cr.id==topId }
+        if(top!=null){
+            if(top.admin.user==getId(key)) {
+                val userfnd = top.users.find { cr-> cr.user==userId }
+                if(userfnd!=null) top.users-=userfnd
+            }
+        }
+    }
+    //=====================================================================================
+    //updateUserTopResult
+    //Input values:
+    //              key:String - user key
+    //              topId:Int - id top
+    //              userId:Int - user id
+    //              newResult:Int - new result
+    //=====================================================================================
+    fun updateUserTopResult(key:String,topId:Int,userId:Int,newResult:Int){
+        val top = topList.find { cr-> cr.id==topId }
+        if(top!=null){
+            if(top.admin.user==getId(key)) {
+                val userfnd = top.users.find { cr-> cr.user==userId }
+                if(userfnd!=null) userfnd.value=newResult
+            }
+        }
     }
 
 }

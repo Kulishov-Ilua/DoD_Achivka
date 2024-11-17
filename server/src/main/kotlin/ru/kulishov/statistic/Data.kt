@@ -62,11 +62,12 @@ fun getMd5Digest(str: String): ByteArray = MessageDigest.getInstance("MD5").dige
 //              id:Int - three id
 //              name:String - extr name
 //              description:String - description
+//              token:String - top token
 //              admin:Int - user id
 //              users:List<UserTop> - users
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @Serializable
-data class Top(val id:Int,val name:String, val description:String,val admin:UserTop,val users:List<UserTop>)
+data class Top(val id:Int,val name:String, val description:String,val token:String,val admin:UserTop,val users:List<UserTop>)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //UserTop

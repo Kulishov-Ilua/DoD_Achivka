@@ -9,13 +9,6 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "Stata",
     ) {
-        LazyColumn {
-            item{
-                shapkaDesctop()
-            }
-            item {
-                mainProfileDesctop(2, "Roman Ivanov", 1, 10,1)
-            }
-        }
+
     }
 }

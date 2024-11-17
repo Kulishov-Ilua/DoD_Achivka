@@ -71,6 +71,8 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+            implementation("androidx.collection:collection:1.1.0")
+
         }
     }
 }
@@ -124,4 +126,5 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
+
 }

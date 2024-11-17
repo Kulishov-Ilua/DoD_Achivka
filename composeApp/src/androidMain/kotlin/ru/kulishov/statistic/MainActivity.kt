@@ -151,7 +151,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-var state by mutableStateOf(1)
+
 
 
 
