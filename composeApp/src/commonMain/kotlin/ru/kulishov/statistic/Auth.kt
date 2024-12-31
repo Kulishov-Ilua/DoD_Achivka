@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
@@ -18,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,10 +25,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 
+var userTek by mutableStateOf(WhoamiRequest("",0,1, emptyList(), emptyList(), emptyList(),
+    emptyList(), emptyList(), emptyList()
+))
 //=====================================================================================
 //bigAuthBlock
 //Input values:
@@ -40,9 +43,50 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun bigAuthBlock(backgroundColor:Color,primaryColor:Color,themeColor:Color,secondColor: Color){
-    var login by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
+    var authFlag by remember { mutableStateOf(false) }
+    if(authFlag){
+        val scope = rememberCoroutineScope()
+        scope.launch {
+            val server = Reuests()
+            var flag = false
+            server.whoami(onSuccess = {
+                res-> flag=true
+                userTek=res
+                //state=1
+            }, onFailure = {
+                res-> println(res)
+                isError=true
+            })
+            if(flag){
+                listMyTop = emptyList()
+                listFriendTop = emptyList()
+
+                listMyAward = emptyList()
+                listFriendAward = emptyList()
+
+                listMyThree= emptyList()
+                listFriendThree = emptyList()
+                for(x in userTek.myTop){
+                    server.getTop(x, onSuccess ={
+                        res-> listMyTop+=res
+                    }, onFailure = {
+                        res-> println(res)
+                    })
+                }
+                for(x in userTek.inTop){
+                    server.getTop(x, onSuccess ={
+                            res-> listFriendTop+=res
+                    }, onFailure = {
+                            res-> println(res)
+                    })
+                }
+                flag=false
+                state =1
+            }
+            authFlag=false
+        }
+    }
     Box(Modifier.width(500.dp)
         .height(457.dp)
         .background(backgroundColor, shape = RoundedCornerShape(10)),
@@ -68,8 +112,8 @@ fun bigAuthBlock(backgroundColor:Color,primaryColor:Color,themeColor:Color,secon
                 fontWeight = FontWeight.Bold,
                 color = primaryColor
             ))
-            TextField(value = login,
-                onValueChange ={login = it},
+            TextField(value = loginInp,
+                onValueChange ={ loginInp = it},
                 label = {
                     Text(text = "Логин", style = TextStyle(
                         fontSize = 16.sp,
@@ -92,8 +136,8 @@ fun bigAuthBlock(backgroundColor:Color,primaryColor:Color,themeColor:Color,secon
                 modifier = Modifier.padding(top=25.dp)
                     .width(400.dp)
             )
-            TextField(value = password,
-                onValueChange ={password = it},
+            TextField(value = passwordInp,
+                onValueChange ={ passwordInp = it},
                 label = {
                     Text(text = "Пароль", style = TextStyle(
                         fontSize = 16.sp,
@@ -123,12 +167,13 @@ fun bigAuthBlock(backgroundColor:Color,primaryColor:Color,themeColor:Color,secon
                 .height(70.dp)
                 .background(themeColor, RoundedCornerShape(15))
                 .clickable {
-                    val req = server.authorization(login,password)
+                    /*val req = server.authorization(login,password)
                     if(req!=null){
                         isError=false
                         key=req
                         state=1
-                    }else isError=true
+                    }else isError=true*/
+                    authFlag=true
                 },
                 contentAlignment = Alignment.Center){
                 Text("Войти", style = TextStyle(
@@ -178,12 +223,19 @@ fun authScreenDesktop(backgroundColor:Color,primaryColor:Color,themeColor:Color,
 //              themeColor:Color - theme color
 //              secondColor:Color - second color
 //=====================================================================================
-
+var loginInp by   mutableStateOf("")
+var passwordInp by mutableStateOf("")
 @Composable
 fun compactAuthBlock(backgroundColor:Color,primaryColor:Color,themeColor:Color,secondColor: Color){
-    var login by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+
     var isError by remember { mutableStateOf(false) }
+    var authFlag by remember { mutableStateOf(false) }
+    if(authFlag){
+        val scope = rememberCoroutineScope()
+        scope.launch {
+
+        }
+    }
     Box(Modifier.width(300.dp)
         .height(400.dp)
         .background(backgroundColor, shape = RoundedCornerShape(10)),
@@ -209,8 +261,8 @@ fun compactAuthBlock(backgroundColor:Color,primaryColor:Color,themeColor:Color,s
                 fontWeight = FontWeight.Bold,
                 color = primaryColor
             ))
-            TextField(value = login,
-                onValueChange ={login = it},
+            TextField(value = loginInp,
+                onValueChange ={ loginInp = it},
                 label = {
                     Text(text = "Логин", style = TextStyle(
                         fontSize = 16.sp,
@@ -233,8 +285,8 @@ fun compactAuthBlock(backgroundColor:Color,primaryColor:Color,themeColor:Color,s
                 modifier = Modifier.padding(top=15.dp)
                     .width(250.dp)
             )
-            TextField(value = password,
-                onValueChange ={password = it},
+            TextField(value = passwordInp,
+                onValueChange ={ passwordInp = it},
                 label = {
                     Text(text = "Пароль", style = TextStyle(
                         fontSize = 16.sp,
@@ -264,12 +316,13 @@ fun compactAuthBlock(backgroundColor:Color,primaryColor:Color,themeColor:Color,s
                 .height(50.dp)
                 .background(themeColor, RoundedCornerShape(15))
                 .clickable {
-                    val req = server.authorization(login,password)
+                    /*val req = server.authorization(login,password)
                     if(req!=null){
                         isError=false
                         key=req
                         state=1
-                    }else isError=true
+                    }else isError=true*/
+                    authFlag=true
                 },
                 contentAlignment = Alignment.Center){
                 Text("Войти", style = TextStyle(

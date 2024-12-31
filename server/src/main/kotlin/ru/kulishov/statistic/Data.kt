@@ -21,7 +21,8 @@ import kotlin.text.Charsets.UTF_8
 //              inAward:List<Int> - user in award
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @Serializable
-data class User(val userId:Int,val token:String,val plan:Int,val myThree:List<Int>,val inThree:List<Int>,val myTop:List<Int>,val inTop:List<Int>,val myAward:List<Int>,val inAward:List<Int>)
+data class User(val userId:Int, val token:String, val plan:Int, val myThree:List<Int>, val inThree:List<Int>,
+                var myTop:List<Int>, var inTop:List<Int>, var myAward:List<Int>, val inAward:List<Int>)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //Username
@@ -49,10 +50,19 @@ data class AddUserRequest( val login:String, val password:String)
 //              password:ByteArray - password
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @Serializable
-data class Userkey(val userId: Int, val login:String, val password:ByteArray){}
+data class Userkey(val userId: Int, val login:String, val password:String){}
 val myRealm = "fsfkos"
 fun getMd5Digest(str: String): ByteArray = MessageDigest.getInstance("MD5").digest(str.toByteArray(UTF_8))
-    var usrKeyList = mutableListOf(Userkey(0,"test", getMd5Digest("test:${myRealm}:5")))
+    var usrKeyList = mutableListOf(Userkey(0,"test", "1"),
+        Userkey(1,"test1", "1"),
+        Userkey(2,"test2", "1"),
+        Userkey(3,"test3", "1"),
+        Userkey(4,"test4", "1"),
+        Userkey(5,"test5", "1"),
+        Userkey(6,"test6", "1"),
+        Userkey(7,"test7", "1"),
+        Userkey(8,"test8", "1"),
+        Userkey(9,"test9", "1"),)
 
 
 
@@ -67,7 +77,8 @@ fun getMd5Digest(str: String): ByteArray = MessageDigest.getInstance("MD5").dige
 //              users:List<UserTop> - users
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @Serializable
-data class Top(val id:Int,val name:String, val description:String,val token:String,val admin:UserTop,val users:List<UserTop>)
+data class Top(val id:Int, val name:String, val description:String, var token:String, val admin:UserTop,
+               var users:List<UserTop>)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //UserTop
@@ -76,7 +87,7 @@ data class Top(val id:Int,val name:String, val description:String,val token:Stri
 //              value:Int - user value
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @Serializable
-data class UserTop(val user:Int,val value:Int)
+data class UserTop(val user:Int, var value:Int)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //Award
 //Variables:
@@ -87,7 +98,7 @@ data class UserTop(val user:Int,val value:Int)
 //              status:Bool - status
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-data class Award(val awardId:Int, val imagePassiveId: ContentType.Image, val imageActiveId: ContentType.Image, val userActive:List<BigInteger>, var status:Boolean)
+data class Award(val awardId:Int/*, val imagePassiveId: ContentType.Image, val imageActiveId: ContentType.Image*/, val userActive:List<BigInteger>, var status:Boolean)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //UserAwardList
@@ -100,7 +111,7 @@ data class Award(val awardId:Int, val imagePassiveId: ContentType.Image, val ima
 //              users:List<BigInteger> - users
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-data class UserAwardList(val id:Int,val name:String, val description:String,val admin:Int,val awardList:List<Award>,val users:List<BigInteger>)
+data class UserAwardList(val id:Int,val token:String, val name:String, val description:String,val admin:Int,val awardList:List<Award>,val users:List<BigInteger>)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //Three
@@ -130,14 +141,58 @@ data class Three(val id:Int,val name:String, val description:String, val threeId
 
 data class Extr(val name:String, val description:String, val imagePassive: ContentType.Image, val imageActive: ContentType.Image, val status:Int, val old:List<Extr>, val young:List<Extr>)
 
-var usernameList = listOf(Username(0,1,"test"))
+var usernameList = listOf(Username(0,1,"Ivanov I.I."),
+    Username(1,1,"Grinev A.A."),
+    Username(2,2,"Larina A.A."),
+    Username(3,1,"Bazarov A.A."),
+    Username(4,1,"Pechorin A.A."),
+    Username(5,2,"Dobroselova A.A."),
+    Username(6,1,"Chatski A.A."),
+    Username(7,1,"Myshkin A.A."),
+    Username(8,1,"Raskolnikov A.A."),
+    Username(9,2,"Karenina A.A."),)
 
-var userList = listOf(User(0,"afl;dsjfksdjflksdjfls",10, emptyList(), emptyList(), emptyList(),
-    emptyList(), emptyList(), emptyList()
-))
+var userList = listOf(User(0,"qqq",3,  emptyList(), emptyList(),listOf(0), emptyList(),
+    emptyList(), emptyList()),
+    User(1,"qq1",1, emptyList(), emptyList(), emptyList(),listOf(0), emptyList(),
+        emptyList()),
+    User(2,"qq2",1, emptyList(), emptyList(), emptyList(),listOf(0), emptyList(),
+        emptyList()),
+    User(3,"qq3",1, emptyList(), emptyList(), emptyList(),listOf(0), emptyList(),
+        emptyList()),
+    User(4,"qq4",1, emptyList(), emptyList(), emptyList(),listOf(0), emptyList(),
+        emptyList()),
+    User(5,"qq5",1, emptyList(), emptyList(), emptyList(),listOf(0), emptyList(),
+        emptyList()),
+    User(6,"qq6",1, emptyList(), emptyList(), emptyList(),listOf(0), emptyList(),
+        emptyList()),
+    User(7,"qq7",1, emptyList(), emptyList(), emptyList(),listOf(0), emptyList(),
+        emptyList()),
+    User(8,"qq8",1, emptyList(), emptyList(), emptyList(),listOf(0), emptyList(),
+        emptyList()),
+    User(9,"qq9",1, emptyList(), emptyList(), emptyList(),listOf(0), emptyList(),
+        emptyList())
+)
 
 var threeList = emptyList<Three>()
 
 var awardList = emptyList<UserAwardList>()
 
-var topList = emptyList<Top>()
+var topList = listOf(Top(0,"Test top", "просто какое-то описание топа. Что-то же нужно написать","sjklfjsklj943ls", UserTop(0,0), listOf(
+    UserTop(1, 999),
+    UserTop(2, 800),
+    UserTop(3, 650),
+    UserTop(4, 400),
+    UserTop(5, 200),
+    UserTop(6, 50),
+    UserTop(7, 20),
+    UserTop(8, 10),
+    UserTop(9, 5)
+))
+)
+
+@Serializable
+data class CreateRequest(
+    val name:String,
+    val description:String
+)

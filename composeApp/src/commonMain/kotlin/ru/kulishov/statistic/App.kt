@@ -66,16 +66,10 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.Resource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
-
-import stata.composeapp.generated.resources.Res
-import stata.composeapp.generated.resources.compose_multiplatform
-import stata.composeapp.generated.resources.elipse
-import stata.composeapp.generated.resources.exit
-import stata.composeapp.generated.resources.man
-import stata.composeapp.generated.resources.more
-import stata.composeapp.generated.resources.profile
-import stata.composeapp.generated.resources.woman
-
+import ru.kulishov.statistic.composeapp.generated.resources.Res
+import ru.kulishov.statistic.composeapp.generated.resources.exit
+import ru.kulishov.statistic.composeapp.generated.resources.more
+import ru.kulishov.statistic.composeapp.generated.resources.profile
 
 
 var modalState by  mutableStateOf(false)

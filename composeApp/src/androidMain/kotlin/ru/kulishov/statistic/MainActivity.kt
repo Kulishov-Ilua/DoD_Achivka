@@ -44,25 +44,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.DigestAuthCredentials
-import io.ktor.client.plugins.auth.providers.digest
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
-import stata.composeapp.generated.resources.Res
-import stata.composeapp.generated.resources.exit
-import stata.composeapp.generated.resources.more
-import java.security.AccessController.getContext
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
-import kotlin.coroutines.coroutineContext
 
 
 class MainActivity : ComponentActivity() {
@@ -71,77 +52,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-/*            Box(Modifier.fillMaxSize().background(darkTheme.background)
-                , contentAlignment = Alignment.Center) {
-
-
-                LazyColumn {
-                    item {
-                        topElement(1, 1, 300,300, Color.White)
-                    }
-                    item {
-                        topElement(1, 2, 200,300, Color.White)
-                    }
-                    item {
-                        topElement(2, 3, 150,300, Color.White)
-                    }
-                    item {
-                        topElement(2, 4, 100,300, Color.White)
-                    }
-                    item {
-                        topElement(2, 5, 40,300, Color.White)
-                    }
-                    item {
-                        topElement(1, 6, 5,300, Color.White)
-                    }
-                }
-            }
-            */
-
-            /*
-            var whoami by remember { mutableStateOf(WhoamiRequest("",1,1, emptyList(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList())) }
-            val scope = rememberCoroutineScope()
-            LaunchedEffect(Unit) {
-            scope.launch {
-                 val client = HttpClient() {
-                    install(Auth) {
-                        digest {
-                            credentials {
-                                DigestAuthCredentials(
-                                    username = "test",
-                                    password = "5"
-                                )
-                            }
-                            //realm = "fsfkos" // Опционально: можно указать требуемую область,
-                        }
-                    }
-
-
-                    defaultRequest {
-*///                        header("Accept", "*/*")
-                /*
-                        header("User-Agent", "Mozilla/5.0")
-                    }
-
-                }
-
-                val response = client.get("https://ed39-87-117-56-165.ngrok-free.app/whoami")
-                if(response.status== HttpStatusCode.OK){
-                    val resp:WhoamiRequest = response.body()
-                        whoami=resp
-                    }else{
-                    Log.e(TAG, response.status.description)
-                    }
-
-                }
-
-            }*/
             Column {
                 shapkaPhone()
                 if(modalState){
                     phoneNavigateModule()
                 }else{
-                    CompactProfile()
+                    CompactProfile("")
                 }
 
             }

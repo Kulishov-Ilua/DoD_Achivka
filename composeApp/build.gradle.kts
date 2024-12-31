@@ -9,6 +9,8 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+
+    kotlin("plugin.serialization") version "2.0.21"
 }
 
 kotlin {
@@ -58,9 +60,13 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(projects.shared)
-            implementation("io.ktor:ktor-client-core:3.0.0")
+                implementation("io.ktor:ktor-client-core:3.0.0")
+            implementation("io.ktor:ktor-client-cio:3.0.0")
+
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
-            implementation("io.ktor:ktor-client-auth:3.0.0")
+                implementation("io.ktor:ktor-client-auth:3.0.0")
+                implementation("io.ktor:ktor-client-content-negotiation:3.0.0")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.0")
 
 
             //implementation("io.ktor:ktor-client-cio:${libs.versions.ktor}")
@@ -71,7 +77,8 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-            implementation("androidx.collection:collection:1.1.0")
+            implementation(libs.androidx.collection)
+
 
         }
     }
@@ -114,8 +121,9 @@ dependencies {
     debugImplementation(compose.uiTooling)
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation(libs.androidx.collection)
 }
-
+group="ru.kulishov.statistic"
 compose.desktop {
     application {
         mainClass = "ru.kulishov.statistic.MainKt"
@@ -126,5 +134,7 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
+
+
 
 }

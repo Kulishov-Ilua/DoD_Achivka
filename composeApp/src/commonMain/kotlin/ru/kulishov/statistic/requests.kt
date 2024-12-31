@@ -5,17 +5,25 @@ import androidx.compose.runtime.mutableStateOf
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.auth.Auth
+import io.ktor.client.plugins.auth.providers.BasicAuthConfig
+import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
 import io.ktor.client.plugins.auth.providers.DigestAuthCredentials
+import io.ktor.client.plugins.auth.providers.basic
 import io.ktor.client.plugins.auth.providers.digest
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
-
-
+val basicURl="http://localhost:8003"
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //Award
@@ -70,22 +78,30 @@ data class Three(val id:Int,val name:String, val description:String, val threeId
 
 data class Extr(val name:String, val description:String, val imagePassive: ContentType.Image, val imageActive: ContentType.Image, val status:Int, val old:List<Extr>, val young:List<Extr>)
 
-
+@Serializable
+data class CreateRequest(
+    val name:String,
+    val description:String
+)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //RequestClass
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Reuests{
     private val client = HttpClient(){
-        install(Auth){
-            digest{
+        install(Auth) {
+            basic {
                 credentials {
-                    DigestAuthCredentials(
-                        username = "test",
-                        password ="5"
-                    )
+                    BasicAuthCredentials(username = loginInp, password = passwordInp)
                 }
-                //realm = "fsfkos" // Опционально: можно указать требуемую область,
+                realm = "Access to the '/secure' path" // Realm должен совпадать с серверным
             }
+        }
+        install(ContentNegotiation) {
+            json(Json {
+                prettyPrint = true
+                isLenient = true
+            })
+
         }
 
 
@@ -97,7 +113,10 @@ class Reuests{
     }
 
     suspend fun whoami(onSuccess: (WhoamiRequest)->Unit, onFailure: (String)->Unit) {
-        val response = client.get("https://ed39-87-117-56-165.ngrok-free.app/whoami")
+        val response = client.get("$basicURl/whoami"){
+            contentType(ContentType.Application.Json)
+        }
+
         if(response.status== HttpStatusCode.OK){
             val resp:WhoamiRequest = response.body()
             onSuccess(resp)
@@ -105,6 +124,136 @@ class Reuests{
             onFailure("Error: ${response.status}")
         }
 
+    }
+    suspend fun getTop(topId:Int,onSuccess: (Top)->Unit, onFailure: (String)->Unit) {
+        val response = client.get("$basicURl/getTop/$topId"){
+            contentType(ContentType.Application.Json)
+        }
+        if(response.status== HttpStatusCode.OK){
+            val resp:Top = response.body()
+            onSuccess(resp)
+        }else{
+            onFailure("Error: ${response.status}")
+        }
+
+    }
+    //=====================================================================================
+    //getUsernameList
+    //Input values:
+    //              userIdList:List<Int> - users id list
+    //Output values:
+    //              usernames:List<Username> - usernames list
+    //=====================================================================================
+    suspend fun getUsernameList(userIdList:List<Int>,onSuccess: (List<Username>)->Unit, onFailure: (String)->Unit){
+        val response = client.get("$basicURl/getUsernameList"){
+            contentType(ContentType.Application.Json)
+            setBody(userIdList)
+        }
+        if(response.status== HttpStatusCode.OK){
+            val resp:List<Username> = response.body()
+            onSuccess(resp)
+        }else{
+            onFailure("Error: ${response.status}")
+        }
+    }
+    //=====================================================================================
+    //checkAdminTop
+    //Input values:
+    //              topId:Int - id top
+    //Output values:
+    //              ret:Boolean - result
+    //=====================================================================================
+    suspend fun checkAdminTop(topId:Int):Boolean{
+        val response = client.get("$basicURl/checkAdminTop/$topId"){
+        }
+        if(response.status== HttpStatusCode.OK){
+            return true
+        }else{
+            return false
+        }
+    }
+    //=====================================================================================
+    //kickUpUser
+    //Input values:
+    //              topId:Int - top id
+    //              userId:Int - user id
+    //=====================================================================================
+    suspend fun kickUpUser(topId:Int,userId:Int){
+        val response = client.post("$basicURl/kickUpUser/$topId/$userId"){
+        }
+        if(response.status== HttpStatusCode.OK){
+        }else{
+            println("procedure kickUpUser unsuccessful")
+        }
+    }
+    //=====================================================================================
+    //updateUserTopResult
+    //Input values:
+    //              topId:Int - id top
+    //              userId:Int - user id
+    //              newResult:Int - new result
+    //=====================================================================================
+    suspend fun updateUserTopResult(topId:Int,userId:Int,newResult:Int){
+        val response = client.post("$basicURl/updateUserTopResult/$topId/$userId/$newResult"){
+        }
+        if(response.status== HttpStatusCode.OK){
+        }else{
+            println("procedure updateUserTopResult unsuccessful")
+        }
+    }
+    //=====================================================================================
+    //getTopToken
+    //Input values:
+    //              topId:Int - id top
+    //Output values:
+    //              token:String - token
+    //=====================================================================================
+    suspend fun getTopToken(topId:Int):String{
+        var ret = ""
+        val response = client.get("$basicURl/getTopToken/$topId"){
+
+        }
+        if(response.status== HttpStatusCode.OK){
+            ret = response.body()
+
+        }
+        return ret
+    }
+    //=====================================================================================
+    //signTop
+    //Input values:
+    //              token:String - token
+    //Output values:
+    //              status:Boolean - status
+    //=====================================================================================
+    suspend fun signTop(token:String):Boolean{
+        val response = client.post("$basicURl/signTop/$token"){
+        }
+        if(response.status== HttpStatusCode.OK){
+            return true
+        }else{
+            println("procedure signTop unsuccessful")
+            return false
+        }
+    }
+    //=====================================================================================
+    //createTop
+    //Input values:
+    //              name:String - token
+    //Output values:
+    //              status:Boolean - status
+    //=====================================================================================
+    suspend fun createTop(name:String,description: String):Boolean{
+        val response = client.post("$basicURl/createTop"){
+            contentType(ContentType.Application.Json)
+            setBody(CreateRequest(name,description))
+        }
+        if(response.status== HttpStatusCode.OK){
+            return true
+        }else{
+            println("procedure createTop unsuccessful: ${response.status}")
+            return false
+        }
     }
 
 }
@@ -132,6 +281,7 @@ var usrKeyList = mutableListOf(
     Userkey(9,"test9", "1"),
 
     )
+@Serializable
 data class Username(val userId:Int, val sex:Int,val username:String)
 var userNameList = mutableListOf(
     Username(0,1,"Ivanov I.I."),

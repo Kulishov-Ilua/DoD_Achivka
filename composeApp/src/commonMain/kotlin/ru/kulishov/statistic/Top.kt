@@ -7,7 +7,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,14 +15,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
@@ -32,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,31 +39,39 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
+
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
-import stata.composeapp.generated.resources.Res
-import stata.composeapp.generated.resources.exit
-import stata.composeapp.generated.resources.first
-import stata.composeapp.generated.resources.man
-import stata.composeapp.generated.resources.redact
-import stata.composeapp.generated.resources.second
-import stata.composeapp.generated.resources.swap
-import stata.composeapp.generated.resources.third
-import stata.composeapp.generated.resources.topinvent
-import stata.composeapp.generated.resources.woman
+import ru.kulishov.statistic.composeapp.generated.resources.Res
+import ru.kulishov.statistic.composeapp.generated.resources.exit
+import ru.kulishov.statistic.composeapp.generated.resources.first
+import ru.kulishov.statistic.composeapp.generated.resources.man
+import ru.kulishov.statistic.composeapp.generated.resources.redact
+import ru.kulishov.statistic.composeapp.generated.resources.second
+import ru.kulishov.statistic.composeapp.generated.resources.swap
+import ru.kulishov.statistic.composeapp.generated.resources.third
+import ru.kulishov.statistic.composeapp.generated.resources.topinvent
+import ru.kulishov.statistic.composeapp.generated.resources.woman
 
 
 data class toptrun(val userId:Int,val name:String, val userSex:Int, val userPosition:Int, val userBalls:Int)
-var updateUserList by mutableStateOf(true)
+//var updateUserList by mutableStateOf(true)
 var  userCardView by mutableStateOf(false)
 var  inventCardView by mutableStateOf(false)
+var updateTop by mutableStateOf(1)
+//обновляемый юзер
+var updateUser by  mutableStateOf(-1)
+//обновляемое значение
+var updateResult by  mutableStateOf(0)
 //=====================================================================================
 //topScreenPhone
 //=====================================================================================
@@ -86,104 +92,183 @@ fun topScreenPhone(){
 //              secondColor:Color - second color
 //=====================================================================================
 @Composable
-fun topScreenDesktop(key:String, topId:Int,backgroundColor: Color,primaryColor:Color,themeColor:Color, defaultColor:Color, secondColor:Color){
-    var top = server.getTop(key, topId)
-    var userCardTrun by remember {  mutableStateOf( toptrun(-1,"",-1,-1,0))}
-    if(top!=null){
-        var userTopList by remember {  mutableStateOf( emptyList<Int>())}
-        var usernames by remember { mutableStateOf(server.getUsernameList(userTopList)) }
-        var toptrunList by remember { mutableStateOf(emptyList<toptrun>()) }
-        var usersSort by remember { mutableStateOf(top.users) }
-        if(updateUserList) {
+fun topScreenDesktop( topId:Int,backgroundColor: Color,primaryColor:Color,themeColor:Color, defaultColor:Color, secondColor:Color){
+    var top by remember {  mutableStateOf( Top(-1,"","","", UserTop(-1,0), emptyList()))}
+    var userTopList by remember {  mutableStateOf( emptyList<Int>())}
+    var usernames by remember { mutableStateOf(emptyList<Username>()) }
+    var toptrunList by remember { mutableStateOf(emptyList<toptrun>()) }
+    var usersSort by remember { mutableStateOf(emptyList<UserTop>()) }
+    var isAdmin by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
+    if(updateTop==1){
+        var flagId=false
+        scope.launch {
+            usersSort= emptyList()
             userTopList= emptyList()
             toptrunList= emptyList()
-            for (x in top.users) {
-                userTopList += x.user
+            usernames= emptyList()
+            val server = Reuests()
+            server.getTop(topId,onSuccess = {
+                    res->
+                top=res
+                if (top.id!=-1) flagId=true
+            }, onFailure = {
+                    res-> println(res)
+            })
+            println("top: $top")
+
+            if(flagId){
+
+                for(x in top.users){
+                    if(userTopList.find { cr-> cr==x.user }==null){
+                        userTopList+=x.user
+                    }
+                }
+                server.getUsernameList(userTopList,
+                    onFailure = {
+                        res->println(res)
+                    },
+                    onSuccess = {
+                        res-> usernames=res
+                    })
+                println(usernames)
             }
-            usernames = server.getUsernameList(userTopList)
             usersSort=top.users
-            usersSort.sortedBy { cr -> cr.value * -1 }
-            var count = 0
+            usersSort=usersSort.sortedBy { cr -> (cr.value * -1) }
+            var count=0
             for (x in usersSort) {
                 count++
                 val name = usernames.find { cr -> cr.userId == x.user }
-                toptrunList += toptrun(x.user, name!!.username, name!!.sex, count, x.value)
-            }
-            updateUserList=false
-        }
-
-        Column(Modifier.fillMaxSize()
-            .background(backgroundColor)) {
-            shapkaDesctop(darkTheme.background, darkTheme.primary, darkTheme.secondary)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if(server.checkAdminTop(topId,key)) {
-                    peopleDrawer(invent = {
-                        inventCardView=true
-                    },
-                        updatePeople = {usr->
-                            val ball = top.users.find { cr-> cr.user==usr.userId }
-                            userCardTrun=toptrun(usr.userId,usr.username,usr.sex,0, ball!!.value)
-                            userCardView=true
-                        },
-                        top.admin.user,
-                        usernames,
-                        Color(32, 32, 32),
-                        primaryColor,
-                        themeColor,
-                        Color(122, 122, 122),
-                        secondColor
-                    )
+                if(toptrunList.find { cr-> cr==toptrun(x.user, name!!.username, name!!.sex, count, x.value) }==null){
+                    toptrunList += toptrun(x.user, name!!.username, name!!.sex, count, x.value)
                 }
-                Box(
-                    Modifier.fillMaxWidth(0.8f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(Modifier.fillMaxWidth(),horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            top.name, style = TextStyle(
-                                fontSize = 40.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = primaryColor
-                            ), modifier = Modifier.padding(top = 40.dp, bottom = 25.dp)
+
+            }
+            isAdmin=server.checkAdminTop(topId)
+            println("admin: $isAdmin")
+            updateTop=0
+        }
+    }
+    if(updateTop==2){
+        val scope = rememberCoroutineScope()
+        scope.launch {
+            val server = Reuests()
+            server.kickUpUser(topId, updateUser)
+            updateTop=1
+        }
+    }
+    if(updateTop==3){
+        val scope = rememberCoroutineScope()
+        scope.launch {
+            val server = Reuests()
+            server.updateUserTopResult(topId, updateUser, updateResult)
+            usersSort= emptyList()
+            userTopList= emptyList()
+            toptrunList= emptyList()
+            usernames= emptyList()
+            updateTop=1
+        }
+    }
+    var userCardTrun by remember {  mutableStateOf( toptrun(-1,"",-1,-1,0))}
+    if(0==0) {
+        if (top.id != -2) {
+
+            Column(
+                Modifier.fillMaxSize()
+                    .background(backgroundColor)
+            ) {
+                shapkaDesctop(darkTheme.background, darkTheme.primary, darkTheme.secondary)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isAdmin) {
+                        peopleDrawer(
+                            invent = {
+                                inventCardView = true
+                            },
+                            updatePeople = { usr ->
+                                val ball = toptrunList.find { cr -> cr.userId == usr.userId }!!.userBalls
+                                userCardTrun =
+                                    toptrun(usr.userId, usr.username, usr.sex, 0, ball)
+                                userCardView = true
+                            },
+                            top.admin.user,
+                            usernames,
+                            Color(32, 32, 32),
+                            primaryColor,
+                            themeColor,
+                            Color(122, 122, 122),
+                            secondColor
                         )
-                        LazyColumn(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, contentPadding = PaddingValues(25.dp)) {
+                    }
+                    Box(
+                        Modifier.fillMaxWidth(0.8f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                top.name, style = TextStyle(
+                                    fontSize = 40.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = primaryColor
+                                ), modifier = Modifier.padding(top = 40.dp, bottom = 25.dp)
+                            )
+                            LazyColumn(
+                                Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                contentPadding = PaddingValues(25.dp)
+                            ) {
 
                                 items(toptrunList) { line ->
-                                    topElement(
-                                        line.userSex,
-                                        line.userPosition,
-                                        line.userBalls,
-                                        toptrunList[0].userBalls,
-                                        primaryColor
-                                    )
+                                    if(line.name== userTek.username){
+                                        topElement(
+                                            line.userSex,
+                                            line.userPosition,
+                                            line.userBalls,
+                                            toptrunList[0].userBalls,
+                                            themeColor
+                                        )
+                                    }else {
+                                        topElement(
+                                            line.userSex,
+                                            line.userPosition,
+                                            line.userBalls,
+                                            toptrunList[0].userBalls,
+                                            primaryColor
+                                        )
+                                    }
                                 }
 
+                            }
                         }
                     }
                 }
             }
-        }
-        if(userCardView) {
-            inventCardView=false
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                bigUserCardTop(userCardTrun,top.id,Color(32, 32, 32),primaryColor,
-                    onSave = {
-                        updateUserList
-                    })
+            if (userCardView) {
+                inventCardView = false
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    bigUserCardTop(userCardTrun, top.id, Color(32, 32, 32), primaryColor,
+                        onSave = {
+
+                        })
+                }
             }
-        }
-        if(inventCardView){
-            userCardView=false
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                bigUnventCardTop(key,top.id,Color(32, 32, 32),primaryColor)
+            if (inventCardView) {
+                userCardView = false
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    bigUnventCardTop(key, top.id, Color(32, 32, 32), primaryColor)
+                }
             }
+
+
+        } else {
+
         }
-
-
-    }else{
-
     }
 }
+
 
 //=====================================================================================
 //topElement
@@ -214,8 +299,13 @@ fun topElement(userSex:Int, userPosition:Int, userBalls:Int, maxBall:Int, theme:
 
     LaunchedEffect(userPosition) {
         delay(1000)
-        animatedWidth = boxWidth*userBalls/maxBall
-        animatedPosition= (boxWidth*userBalls/maxBall)+10.dp
+        if(maxBall==0){
+            animatedWidth = boxWidth * userBalls / 1
+            animatedPosition = (boxWidth * userBalls / 1) + 10.dp
+        }else {
+            animatedWidth = boxWidth * userBalls / maxBall
+            animatedPosition = (boxWidth * userBalls / maxBall) + 10.dp
+        }
         animatedAlphaIcon=1f
         //println("$userPosition $boxWidth $userPosition $animatedWidth")
     }
@@ -260,7 +350,7 @@ fun topElement(userSex:Int, userPosition:Int, userBalls:Int, maxBall:Int, theme:
                 .border(3.dp, color =theme, shape = RoundedCornerShape(15))
                 , contentAlignment = Alignment.Center
             ){
-                Image(painterResource(if(userSex==1)Res.drawable.man else Res.drawable.woman), contentDescription = null)
+                Image(painterResource(if(userSex==1) Res.drawable.man else Res.drawable.woman), contentDescription = null)
             }
             Box(Modifier.padding(start = 15.dp, end = 140.dp)
                 .fillMaxSize()
@@ -489,7 +579,7 @@ fun inventCard( backgroundColor:Color, primaryColor:Color, onClick:()->Unit){
             onClick()
         },
         contentAlignment = Alignment.Center){
-        Text(text, style = TextStyle(
+        Text("Пригласить", style = TextStyle(
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = primaryColor
@@ -514,7 +604,7 @@ fun bigUserCardTop(user:toptrun,topId:Int, backgroundColor:Color, primaryColor:C
         .background(backgroundColor, RoundedCornerShape(10)),
         contentAlignment = Alignment.Center){
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(painterResource(if(user.userSex==1)Res.drawable.man else Res.drawable.woman), contentDescription = null,
+            Image(painterResource(if(user.userSex==1) Res.drawable.man else Res.drawable.woman), contentDescription = null,
                 modifier = Modifier.height(180.dp))
             Text(user.name, style = TextStyle(
                 fontSize = 36.sp,
@@ -564,8 +654,8 @@ fun bigUserCardTop(user:toptrun,topId:Int, backgroundColor:Color, primaryColor:C
                     .height(70.dp)
                     .background(Color(232,51,31), RoundedCornerShape(10))
                     .clickable {
-                        server.kickUpUser(key,topId,user.userId)
-                        updateUserList=true
+                        updateUser=user.userId
+                        updateTop=2
                         userCardView=false
                     },
                     contentAlignment = Alignment.Center){
@@ -582,8 +672,9 @@ fun bigUserCardTop(user:toptrun,topId:Int, backgroundColor:Color, primaryColor:C
                     .height(70.dp)
                     .background(Color(109,150,255), RoundedCornerShape(10))
                     .clickable {
-                        server.updateUserTopResult(key,topId,user.userId,result.toInt())
-                        updateUserList=true
+                        updateUser=user.userId
+                        updateResult=result.toInt()
+                        updateTop=3
                         userCardView=false
                         onSave()
                     },
@@ -620,7 +711,16 @@ fun bigUserCardTop(user:toptrun,topId:Int, backgroundColor:Color, primaryColor:C
 //=====================================================================================
 @Composable
 fun bigUnventCardTop(key:String,topId:Int, backgroundColor:Color, primaryColor:Color){
-    val token = server.getTopToken(key,topId)
+    var token by remember { mutableStateOf("") }
+    var updatetoken by remember { mutableStateOf(true) }
+    val server = Reuests()
+    val scope = rememberCoroutineScope()
+    if(updatetoken) {
+        scope.launch {
+            token=server.getTopToken(topId)
+            updatetoken=false
+        }
+    }
     Box(Modifier.width(500.dp)
         .height(500.dp)
         .background(backgroundColor, RoundedCornerShape(10)),
@@ -641,7 +741,7 @@ fun bigUnventCardTop(key:String,topId:Int, backgroundColor:Color, primaryColor:C
                     .border( 3.dp,primaryColor, RoundedCornerShape(10))
                     ,contentAlignment = Alignment.Center) {
                     TextField(
-                        value = token!!,
+                        value = token,
                         onValueChange = {  },
                         singleLine = true,
                         //enabled = false,
@@ -673,6 +773,261 @@ fun bigUnventCardTop(key:String,topId:Int, backgroundColor:Color, primaryColor:C
             Icon(painterResource(Res.drawable.exit), contentDescription = null,
                 tint = primaryColor, modifier = Modifier.clickable {
                     inventCardView=false
+                })
+        }
+    }
+}
+
+
+//=====================================================================================
+//bigSignCard
+//Input values:
+//              key:String - user key
+//              topId:Int - top id
+//              backgroundColor:Color - background color
+//              primaryColor:Color - primary color
+//=====================================================================================
+@Composable
+fun bigSignCard(type:Int, backgroundColor:Color, primaryColor:Color){
+    var token by remember { mutableStateOf("") }
+    var isError by remember { mutableStateOf(false) }
+    var updatetoken by remember { mutableStateOf(false) }
+    val server = Reuests()
+    val scope = rememberCoroutineScope()
+    if(updatetoken) {
+        scope.launch {
+            isError = server.signTop(token)
+            if(!isError) signState=false
+            updateProfile=true
+            updatetoken=false
+
+        }
+    }
+    Box(Modifier.width(500.dp)
+        .height(500.dp)
+        .background(backgroundColor, RoundedCornerShape(10)),
+        contentAlignment = Alignment.Center){
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Image(
+                painterResource(Res.drawable.topinvent), contentDescription = null,
+                modifier = Modifier.padding(bottom = 25.dp).height(180.dp)
+            )
+            Text(
+                "Присоединиться", style = TextStyle(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = primaryColor
+                )
+            )
+            Box(
+                Modifier
+                    .padding(top = 25.dp)
+                    .width(400.dp)
+                    .height(100.dp)
+                    .border(3.dp, primaryColor, RoundedCornerShape(10)), contentAlignment = Alignment.Center
+            ) {
+                TextField(
+                    value = token,
+                    onValueChange = { token = it },
+                    singleLine = true,
+                    isError = isError,
+                    //enabled = false,
+                    textStyle = TextStyle(
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = primaryColor,
+                    ),
+                    colors = TextFieldDefaults.textFieldColors(
+                        cursorColor = primaryColor,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        backgroundColor = Color.Transparent,
+                        textColor = primaryColor,
+                        disabledTextColor = primaryColor,
+                        errorLeadingIconColor = Color(232, 51, 31)
+                    ),
+                    modifier = Modifier
+                        .height(100.dp)
+                )
+            }
+            Box(
+                Modifier
+                    .padding(top = 15.dp)
+                    .width(250.dp)
+                    .height(70.dp)
+                    .background(Color(109, 150, 255), RoundedCornerShape(10))
+                    .clickable {
+                        updatetoken = true
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Присоединиться", style = TextStyle(
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = primaryColor
+                    )
+                )
+            }
+        }
+        Box(Modifier
+            .padding(end=25.dp,top=25.dp)
+            .fillMaxSize()
+            , contentAlignment = Alignment.TopEnd
+        ){
+            Icon(painterResource(Res.drawable.topinvent), contentDescription = null,
+                tint = primaryColor, modifier = Modifier.clickable {
+                    signState=false
+                })
+        }
+    }
+}
+
+//=====================================================================================
+//createGameItembig
+//Input values:
+//              type:Int - type
+//              backgroundColor:Color - background color
+//              primaryColor:Color - primary color
+//=====================================================================================
+@Composable
+fun createGameItembig(type:Int, backgroundColor:Color, primaryColor:Color){
+    var name by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var isErrorName by remember { mutableStateOf(false) }
+    var updatetoken by remember { mutableStateOf(false) }
+    val server = Reuests()
+    val scope = rememberCoroutineScope()
+    if(updatetoken) {
+        scope.launch {
+            if(name=="") isErrorName=true
+            else{
+                isErrorName=false
+                if(server.createTop(name,description)==true){
+                    createWindow=false
+                }
+                updateProfile=true
+                updatetoken=false
+            }
+        }
+    }
+    Box(Modifier.width(600.dp).height(600.dp)
+        .background(backgroundColor, RoundedCornerShape(10)),
+        contentAlignment = Alignment.Center){
+        Column(Modifier.padding(top=50.dp, bottom = 25.dp).width(500.dp),horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                "Создать ${if(type==1) "топ"
+                else if(type==2) "награды"
+                else "дерево"}", style = TextStyle(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = primaryColor
+                )
+            )
+            Box(Modifier.padding(top=25.dp, bottom = 15.dp).fillMaxWidth(), contentAlignment = Alignment.CenterStart){
+                Text("Название:", style = TextStyle(
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = primaryColor
+                    )
+                )
+            }
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .border(3.dp, primaryColor, RoundedCornerShape(10)), contentAlignment = Alignment.Center
+            ) {
+                TextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    isError = isErrorName,
+                    //enabled = false,
+                    textStyle = TextStyle(
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = primaryColor,
+                    ),
+                    colors = TextFieldDefaults.textFieldColors(
+                        cursorColor = primaryColor,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        backgroundColor = Color.Transparent,
+                        textColor = primaryColor,
+                        disabledTextColor = primaryColor,
+                        errorLeadingIconColor = Color(232, 51, 31)
+                    ),
+                    modifier = Modifier
+                        .height(100.dp)
+                )
+            }
+            Box(Modifier.padding(top=25.dp, bottom = 15.dp).fillMaxWidth(), contentAlignment = Alignment.CenterStart){
+                Text("Описание:", style = TextStyle(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = primaryColor
+                )
+                )
+            }
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .border(3.dp, primaryColor, RoundedCornerShape(10)), contentAlignment = Alignment.Center
+            ) {
+                TextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    singleLine = true,
+                    //isError = isErrorName,
+                    //enabled = false,
+                    textStyle = TextStyle(
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = primaryColor,
+                    ),
+                    colors = TextFieldDefaults.textFieldColors(
+                        cursorColor = primaryColor,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        backgroundColor = Color.Transparent,
+                        textColor = primaryColor,
+                        disabledTextColor = primaryColor,
+                        errorLeadingIconColor = Color(232, 51, 31)
+                    ),
+                    modifier = Modifier
+                        .height(200.dp)
+                )
+            }
+            Box(
+                Modifier
+                    .padding(top = 25.dp)
+                    .width(250.dp)
+                    .height(70.dp)
+                    .background(Color(109, 150, 255), RoundedCornerShape(10))
+                    .clickable {
+                        updatetoken = true
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Создать", style = TextStyle(
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = primaryColor
+                    )
+                )
+            }
+        }
+        Box(Modifier
+            .padding(end=25.dp,top=25.dp)
+            .fillMaxSize()
+            , contentAlignment = Alignment.TopEnd
+        ){
+            Icon(painterResource(Res.drawable.exit), contentDescription = null,
+                tint = primaryColor, modifier = Modifier.clickable {
+                    createWindow=false
                 })
         }
     }

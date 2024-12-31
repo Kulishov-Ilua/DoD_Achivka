@@ -53,14 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.ComposeViewport
 import kotlinx.browser.document
 import kotlinx.browser.window
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
-import stata.composeapp.generated.resources.Res
-import stata.composeapp.generated.resources.exit
-import stata.composeapp.generated.resources.more
+
 
 enum class WindowSizeClass { Compact, Medium, Expanded }
 
@@ -102,7 +95,7 @@ fun main() {
             if(state==-1) authScreenDesktop(darkTheme.background, darkTheme.primary, darkTheme.secondary,
                 Color(32,32,32))
             if(state==1) ExpandedProfile(key)
-            if(state==11) topScreenDesktop(key,
+            if(state==11) topScreenDesktop(
                 topActive,darkTheme.background, darkTheme.primary, darkTheme.secondary,Color(32,32,32),
                 darkTheme.onPrimary)
         }

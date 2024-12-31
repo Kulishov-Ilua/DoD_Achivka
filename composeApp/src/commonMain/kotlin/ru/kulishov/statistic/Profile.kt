@@ -1,16 +1,9 @@
 package ru.kulishov.statistic
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -20,7 +13,6 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,12 +26,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
-import stata.composeapp.generated.resources.Res
-import stata.composeapp.generated.resources.elipse
-import stata.composeapp.generated.resources.man
-import stata.composeapp.generated.resources.woman
-import kotlin.coroutines.EmptyCoroutineContext
+import ru.kulishov.statistic.composeapp.generated.resources.Res
+import ru.kulishov.statistic.composeapp.generated.resources.elipse
+import ru.kulishov.statistic.composeapp.generated.resources.man
+import ru.kulishov.statistic.composeapp.generated.resources.woman
 
 
 var listMyTop by mutableStateOf( emptyList<Top>())
@@ -52,6 +44,15 @@ var listMyThree by mutableStateOf( emptyList<Three>())
 var listFriendThree by mutableStateOf( emptyList<Three>())
 
 var topActive by  mutableStateOf(0)
+var topActiveBody by  mutableStateOf(Top(-1,"","","", UserTop(-1,0), emptyList()))
+
+var sigType by mutableStateOf(1)
+
+var updateProfile by mutableStateOf(false)
+var signState by mutableStateOf(false)
+
+var createWindow by mutableStateOf(false)
+
 //=====================================================================================
 //profile block for desktop
 //Input values:
@@ -141,7 +142,7 @@ fun mainProfilePhone(sex:Int, name:String, three:Int, top:Int, award:Int){
     Box(Modifier.fillMaxWidth().background(darkTheme.background)){
         Box(Modifier.padding(end=0.dp).fillMaxWidth(), contentAlignment = Alignment.Center){
             Image(painterResource(Res.drawable.elipse), null, modifier = Modifier.scale(2f))
-            Image(painter = painterResource(if(sex==0) Res.drawable.woman else Res.drawable.man), null
+            Image(painter = painterResource(if(sex==0)Res.drawable.woman else Res.drawable.man), null
                 , modifier = Modifier.scale(1f))
 
         }
@@ -357,7 +358,7 @@ fun CompactProfile(key:String){
                                     items(listMyTop) { myTop ->
                                         Box(Modifier.clickable {
                                             topActive=myTop.id
-                                            state=11
+                                            state =11
                                         }) {
                                             gameItemPhone(
                                                 myTop.name,
@@ -371,7 +372,7 @@ fun CompactProfile(key:String){
                                     items(listFriendTop) { intop ->
                                         Box(Modifier.clickable {
                                             topActive=intop.id
-                                            state=11
+                                            state =11
                                         }) {
                                             gameItemPhone(
                                                 intop.name,
@@ -558,18 +559,49 @@ fun CompactProfile(key:String){
 
 @Composable
 fun ExpandedProfile(key:String){
-    listMyTop = emptyList()
-    listFriendTop = emptyList()
+    val scope = rememberCoroutineScope()
+    if(updateProfile){
+        val server = Reuests()
+        scope.launch {
+            server.whoami(
+                onSuccess = {
+                    res->
+                    userTek=res
+                },
+                onFailure = {
+                    m->
+                    println(m)
+                }
+            )
+            listMyTop = emptyList()
+            listFriendTop = emptyList()
 
-    listMyAward = emptyList()
-    listFriendAward = emptyList()
+            listMyAward = emptyList()
+            listFriendAward = emptyList()
 
-    listMyThree= emptyList()
-    listFriendThree = emptyList()
-    var whoami = WhoamiRequest("Rowan Petrov", 1,10, emptyList(), emptyList(), emptyList(),
-        emptyList(), emptyList(), emptyList()
-    )
-    if(key!=null){
+            listMyThree= emptyList()
+            listFriendThree = emptyList()
+            for(x in userTek.myTop){
+                server.getTop(x, onSuccess ={
+                        res-> listMyTop+=res
+                }, onFailure = {
+                        res-> println(res)
+                })
+            }
+            for(x in userTek.inTop){
+                server.getTop(x, onSuccess ={
+                        res-> listFriendTop+=res
+                }, onFailure = {
+                        res-> println(res)
+                })
+            }
+            updateProfile=false
+                //state =1
+        }
+    }
+
+    var whoami = userTek
+    /*if(key!=null){
         val newWhoami = server.whoamiRequest(key)
         if(newWhoami!=null) whoami=newWhoami
     }
@@ -600,7 +632,7 @@ fun ExpandedProfile(key:String){
     }
     if(whoami.inAward!=null){
 
-    }
+    }*/
     LazyColumn() {
         item{
             shapkaDesctop(darkTheme.background, darkTheme.primary, darkTheme.secondary)
@@ -620,9 +652,10 @@ fun ExpandedProfile(key:String){
                     LazyRow(Modifier.padding(start=100.dp, top=80.dp)) {
                         if(whoami.myTop!=null) {
                             items(listMyTop) { myTop ->
-                                Box(Modifier.clickable {
+                                Box(Modifier.padding(end=25.dp).clickable {
                                     topActive=myTop.id
-                                    state=11
+                                    topActiveBody = myTop
+                                    state =11
                                 }) {
                                     gameItemDesktop(
                                         myTop.name,
@@ -634,9 +667,10 @@ fun ExpandedProfile(key:String){
                         }
                         if(whoami.inTop!=null) {
                             items(listFriendTop) { intop ->
-                                Box(Modifier.clickable {
+                                Box(Modifier.padding(end=25.dp).clickable {
                                     topActive=intop.id
-                                    state=11
+                                    topActiveBody = intop
+                                    state =11
                                 }) {
                                     gameItemDesktop(
                                         intop.name,
@@ -651,7 +685,30 @@ fun ExpandedProfile(key:String){
                                 darkTheme.secondary.red, darkTheme.secondary.green, darkTheme.secondary.blue,
                                 alpha = 0.5f
                             )
-                            Box(Modifier.width(400.dp).height(200.dp).background(nC, shape = RoundedCornerShape(10)),
+                            Box(Modifier.padding(end=25.dp).width(400.dp).height(200.dp).background(nC, shape = RoundedCornerShape(10))
+                                .clickable {
+                                    sigType=1
+                                    signState=true
+                                },
+                                contentAlignment = Alignment.Center){
+                                Text("sign in", style = TextStyle(
+                                    fontSize = 36.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color =  darkTheme.primary
+                                )
+                                )
+                            }
+                        }
+                        item {
+                            val nC = Color(
+                                darkTheme.secondary.red, darkTheme.secondary.green, darkTheme.secondary.blue,
+                                alpha = 0.5f
+                            )
+                            Box(Modifier.padding(end=25.dp).width(400.dp).height(200.dp).background(nC, shape = RoundedCornerShape(10))
+                                .clickable {
+                                    sigType=1
+                                    createWindow=true
+                                },
                                 contentAlignment = Alignment.Center){
                                 Text("Add", style = TextStyle(
                                     fontSize = 36.sp,
@@ -745,6 +802,18 @@ fun ExpandedProfile(key:String){
 
                 }
             }
+        }
+    }
+    if(signState) {
+        createWindow=false
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            bigSignCard(sigType, Color(32,32,32), darkTheme.primary)
+        }
+    }
+    if(createWindow) {
+        signState=false
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            createGameItembig(sigType, Color(32,32,32), darkTheme.primary)
         }
     }
 }
