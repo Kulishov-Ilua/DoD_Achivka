@@ -61,7 +61,6 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(projects.shared)
                 implementation("io.ktor:ktor-client-core:3.0.0")
-            implementation("io.ktor:ktor-client-cio:3.0.0")
 
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
                 implementation("io.ktor:ktor-client-auth:3.0.0")
@@ -78,7 +77,7 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.androidx.collection)
-
+            implementation("io.ktor:ktor-client-cio:3.0.0")
 
         }
     }
@@ -122,6 +121,9 @@ dependencies {
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation(libs.androidx.collection)
+    implementation("io.ktor:ktor-client-cio:3.0.0")
+    implementation("io.ktor:ktor-client-core-wasm-js:3.0.1")
+
 }
 group="ru.kulishov.statistic"
 compose.desktop {

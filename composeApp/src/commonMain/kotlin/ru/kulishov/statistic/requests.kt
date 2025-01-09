@@ -34,8 +34,11 @@ val basicURl="http://localhost:8003"
 //              userActive:List<BigInteger> - users
 //              status:Bool - status
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-data class Award(val awardId:Int, val imagePassiveId: ContentType.Image, val imageActiveId: ContentType.Image, val userActive:List<Int>, var status:Boolean)
+@Serializable
+data class Award(val awardId:Int, val name:String,
+                 val description: String="",
+                 val userActive:List<Int>,
+                 var status:Boolean=false)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //UserAwardList
@@ -47,8 +50,8 @@ data class Award(val awardId:Int, val imagePassiveId: ContentType.Image, val ima
 //              awardList:List<Award> - award list
 //              users:List<BigInteger> - users
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-data class UserAwardList(val id:Int,val name:String, val description:String,val admin:Int,val awardList:List<Award>,val users:List<Int>)
+@Serializable
+data class UserAwardList(val id:Int,val token:String, val name:String, val description:String,val admin:Int,val awardList:List<Award>,val users:List<Int>)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //Three
@@ -125,6 +128,19 @@ class Reuests{
         }
 
     }
+    suspend fun getId(onSuccess: (Int)->Unit, onFailure: (String)->Unit) {
+        val response = client.get("$basicURl/id"){
+            contentType(ContentType.Application.Json)
+        }
+
+        if(response.status== HttpStatusCode.OK){
+            val resp:Int = response.body()
+            onSuccess(resp)
+        }else{
+            onFailure("Error: ${response.status}")
+        }
+
+    }
     suspend fun getTop(topId:Int,onSuccess: (Top)->Unit, onFailure: (String)->Unit) {
         val response = client.get("$basicURl/getTop/$topId"){
             contentType(ContentType.Application.Json)
@@ -172,6 +188,23 @@ class Reuests{
             return false
         }
     }
+    //=====================================================================================
+    //checkAdminTop
+    //Input values:
+    //              topId:Int - id top
+    //Output values:
+    //              ret:Boolean - result
+    //=====================================================================================
+    suspend fun checkAdminAward(topId:Int):Boolean{
+        val response = client.get("$basicURl/checkAdminAward/$topId"){
+        }
+        if(response.status== HttpStatusCode.OK){
+            return true
+        }else{
+            return false
+        }
+    }
+
     //=====================================================================================
     //kickUpUser
     //Input values:
@@ -255,7 +288,105 @@ class Reuests{
             return false
         }
     }
+    //--------------------------------------------------------------------------------------
+    //Award
+    //--------------------------------------------------------------------------------------
+    suspend fun getAwardList(topId:Int,onSuccess: (UserAwardList)->Unit, onFailure: (String)->Unit) {
+        val response = client.get("$basicURl/getAwardList/$topId"){
+            contentType(ContentType.Application.Json)
+        }
+        if(response.status== HttpStatusCode.OK){
+            val resp:UserAwardList = response.body()
+            onSuccess(resp)
+        }else{
+            onFailure("Error: ${response.status}")
+        }
 
+    }
+    suspend fun awardStat(awardListId:Int,awardId:Int,userId:Int,onSuccess: ()->Unit, onFailure: (String)->Unit) {
+        val response = client.post("$basicURl/awardStatus/$awardListId/$awardId/$userId"){
+            //contentType(ContentType.Application.Json)
+        }
+        if(response.status== HttpStatusCode.OK){
+            onSuccess()
+        }else{
+            onFailure("Error: ${response.toString()}")
+        }
+
+    }
+    //=====================================================================================
+    //createTop
+    //Input values:
+    //              name:String - token
+    //Output values:
+    //              status:Boolean - status
+    //=====================================================================================
+    suspend fun createAwardList(name:String,description: String):Boolean{
+        val response = client.post("$basicURl/createAwardList"){
+            contentType(ContentType.Application.Json)
+            setBody(CreateRequest(name,description))
+        }
+        if(response.status== HttpStatusCode.OK){
+            return true
+        }else{
+            println("procedure createTop unsuccessful: ${response.status}")
+            return false
+        }
+    }
+    //=====================================================================================
+    //getTopToken
+    //Input values:
+    //              topId:Int - id top
+    //Output values:
+    //              token:String - token
+    //=====================================================================================
+    suspend fun getAwardToken(topId:Int):String{
+        var ret = ""
+        val response = client.get("$basicURl/getAwardToken/$topId"){
+
+        }
+        if(response.status== HttpStatusCode.OK){
+            ret = response.body()
+
+        }
+        return ret
+    }
+    //=====================================================================================
+    //signTop
+    //Input values:
+    //              token:String - token
+    //Output values:
+    //              status:Boolean - status
+    //=====================================================================================
+    suspend fun signAward(token:String):Boolean{
+        val response = client.post("$basicURl/signAward/$token"){
+        }
+        if(response.status== HttpStatusCode.OK){
+            return true
+        }else{
+            println("procedure signTop unsuccessful")
+            return false
+        }
+    }
+    //=====================================================================================
+    //createTop
+    //Input values:
+    //              name:String - token
+    //Output values:
+    //              status:Boolean - status
+    //=====================================================================================
+    suspend fun createAward(awardListId:Int,name:String,description: String):Boolean{
+        val response = client.post("$basicURl/createAwardItem/$awardListId"){
+            contentType(ContentType.Application.Json)
+            setBody(CreateRequest(name,description))
+        }
+        if(response.status== HttpStatusCode.OK){
+            return true
+        }else{
+            println("procedure createAward unsuccessful: ${response.status}")
+            return false
+        }
+    }
 }
 
 //##################################################################################################

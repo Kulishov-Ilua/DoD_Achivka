@@ -25,6 +25,7 @@ import io.ktor.server.routing.*
 import io.ktor.util.Digest
 import kotlinx.serialization.json.Json
 
+
 import java.io.File
 import java.security.DigestInputStream
 import java.time.LocalDateTime
@@ -128,6 +129,17 @@ fun Application.module() {
                 }else call.respond(HttpStatusCode.Unauthorized)
                 //call.respond(HttpStatusCode.OK, )
             }
+            get("/id"){
+                val principal = call.principal<UserIdPrincipal>()
+                if(principal!=null) {
+                    val user = userList.find { it.userId==principal.name.toInt() }
+                    if(user!=null){
+                        call.respond(HttpStatusCode.OK, user.userId)
+                    }else call.respond(HttpStatusCode.NotFound)
+
+                }else call.respond(HttpStatusCode.Unauthorized)
+                //call.respond(HttpStatusCode.OK, )
+            }
             get("/getTop/{topId}"){
                 val principal = call.principal<UserIdPrincipal>()
                 val topId = call.parameters["topId"]
@@ -165,6 +177,20 @@ fun Application.module() {
                         val top = topList.find { cr-> cr.id==topIdStr.toInt() }
                         if(top!=null) {
                             if (top.admin.user == principal.name.toInt()) call.respond(
+                                HttpStatusCode.OK)
+                            else call.respond(HttpStatusCode.Conflict)
+                        }else call.respond(HttpStatusCode.NotFound)
+                    } else call.respond(HttpStatusCode.BadRequest)
+                }else call.respond(HttpStatusCode.Unauthorized)
+            }
+            get("/checkAdminAward/{topId}"){
+                val principal = call.principal<UserIdPrincipal>()
+                if(principal!=null) {
+                    val topIdStr = call.parameters["topId"]
+                    if (topIdStr != null) {
+                        val top = awardList.find { cr-> cr.id==topIdStr.toInt() }
+                        if(top!=null) {
+                            if (top.admin == principal.name.toInt()) call.respond(
                                 HttpStatusCode.OK)
                             else call.respond(HttpStatusCode.Conflict)
                         }else call.respond(HttpStatusCode.NotFound)
@@ -283,7 +309,8 @@ fun Application.module() {
                     token+=System.currentTimeMillis().toString()
                     awardList+=UserAwardList(awardList.size,token,name.name,name.description,principal.name.toInt(),
                         emptyList(),
-                        emptyList() )
+                        listOf(0)
+                    )
                     val userN = userList.find { cr-> cr.userId== principal.name.toInt()}
                     if(userN!=null){
                         userN.myAward += awardList.size-1
@@ -292,6 +319,110 @@ fun Application.module() {
                     call.respond(HttpStatusCode.OK, topList)
                 }else call.respond(HttpStatusCode.Unauthorized)
             }
+            get("/getAwardList/{topId}"){
+                val principal = call.principal<UserIdPrincipal>()
+                val topId = call.parameters["topId"]
+                if(topId!=null) {
+                    val user = userList.find { it.userId == principal!!.name.toInt() }
+                    if (user != null) {
+                        val top = awardList.find { cr -> cr.id == topId.toInt() }
+                        if (top != null) {
+                            if (top.admin == user.userId) {
+                                call.respond(HttpStatusCode.OK, top)
+                            } else {
+                                for (x in top.users) {
+                                    if (x == user.userId) call.respond(HttpStatusCode.OK, top)
+                                }
+                                call.respond(HttpStatusCode.Unauthorized)
+                            }
+                        } else call.respond(HttpStatusCode.NotFound)
+                    } else call.respond(HttpStatusCode.Unauthorized)
+                }else call.respond(HttpStatusCode.BadRequest)
+            }
+            post("/awardStatus/{awardListId}/{awardId}/{userId}"){
+                val awardListId = call.parameters["awardListId"]
+                val awardId = call.parameters["awardId"]
+                val userId = call.parameters["userId"]
+                val principal=call.principal<UserIdPrincipal>()
+                if(principal!=null){
+                    if(awardListId!=null&&awardId!=null&&userId!=null){
+                        val awardListFnd = awardList.find { cr-> cr.id==awardListId.toInt() }
+                        if(awardListFnd!=null){
+                            if(awardListFnd.admin==principal.name.toInt()) {
+                                val awardFnd = awardListFnd.awardList?.find { cr -> cr.awardId==awardId.toInt() }
+                                if(awardFnd!=null){
+                                    if(awardFnd.userActive!=null) {
+                                        if (awardFnd.userActive!!.contains(userId.toInt())) {
+                                            awardFnd.userActive = awardFnd.userActive!! - userId.toInt()
+                                            call.respond(HttpStatusCode.OK)
+                                        }else{
+                                            awardFnd.userActive = awardFnd.userActive!! + userId.toInt()
+                                            call.respond(HttpStatusCode.OK)
+                                        }
+                                    }else call.respond(HttpStatusCode.NotFound,"user not found")
+                                }else call.respond(HttpStatusCode.NotFound,"award not found")
+                            }else call.respond(HttpStatusCode.Locked)
+                        }else call.respond(HttpStatusCode.NotFound, "list not found")
+                    }else call.respond(HttpStatusCode.BadRequest)
+                }else call.respond(HttpStatusCode.Unauthorized)
+            }
+            get("getAwardToken/{topId}"){
+                val topId = call.parameters["topId"]
+                val principal=call.principal<UserIdPrincipal>()
+                if(principal!=null){
+                    if(topId!=null){
+                        val top = awardList.find { cr-> cr.id==topId.toInt() }
+                        if(top!=null){
+                            if(top.admin==principal.name.toInt()) {
+                                call.respond(top.token)
+                            }else call.respond(HttpStatusCode.Locked)
+                        }else call.respond(HttpStatusCode.NotFound)
+                    }else call.respond(HttpStatusCode.BadRequest)
+                }else call.respond(HttpStatusCode.Unauthorized)
+            }
+            post("signAward/{token}"){
+                val token = call.parameters["token"]
+                val principal=call.principal<UserIdPrincipal>()
+                if(principal!=null){
+                    if(token!=null){
+                        val top = awardList.find { cr-> cr.token==token }
+                        if(top!=null){
+                            if(top.users.find { cr-> cr== principal.name.toInt()}==null){
+                                top.users+=principal.name.toInt()
+                                var token = System.currentTimeMillis().toString()
+                                token+= topList.size.toString()
+                                token+=System.currentTimeMillis().toString()
+                                top.token=token
+                                val userN = userList.find { cr-> cr.userId== principal.name.toInt()}
+                                if(userN!=null){
+                                    userN.inAward += top.id
+                                }
+                            }
+
+                            call.respond(HttpStatusCode.OK)
+                        }else call.respond(HttpStatusCode.NotFound)
+                    }else call.respond(HttpStatusCode.BadRequest)
+                }else call.respond(HttpStatusCode.Unauthorized)
+            }
+            post("createAwardItem/{awardListId}"){
+                val awardListId = call.parameters["awardListId"]
+                val name = call.receive<CreateRequest>()
+                val principal=call.principal<UserIdPrincipal>()
+                if(principal!=null){
+                    if(name.name!=null&&awardListId!=null){
+                        val award = awardList.find { cr-> cr.id==awardListId.toInt() }
+                        if(award!=null){
+                            if(award.admin==principal.name.toInt()){
+                                award.awardList = award.awardList!! + Award(
+                                    award.awardList!!.size,name.name,name.description,
+                                    emptyList(),false)
+                                call.respond(HttpStatusCode.OK)
+                            }else call.respond(HttpStatusCode.Locked)
+                        }else call.respond(HttpStatusCode.NotFound)
+                    }else call.respond(HttpStatusCode.BadRequest)
+                }else call.respond(HttpStatusCode.Unauthorized)
+            }
+
         }
     }
 }

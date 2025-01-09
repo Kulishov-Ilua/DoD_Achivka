@@ -49,9 +49,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.DigestAuthCredentials
-import io.ktor.client.plugins.auth.providers.digest
+//import io.ktor.client.plugins.auth.Auth
+//import io.ktor.client.plugins.auth.providers.DigestAuthCredentials
+//import io.ktor.client.plugins.auth.providers.digest
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -130,7 +130,8 @@ fun shapkaDesctop(backgroundColor: Color,primaryColor:Color,themeColor:Color){
             }
             Box(Modifier.fillMaxWidth()
                 .clickable {
-                    state=1
+                    if(state==1) state=-1
+                    else state=1
                 }, contentAlignment = Alignment.CenterEnd){
                 Icon(painter = painterResource(Res.drawable.profile), contentDescription = "",
                     tint =if(state!=1) primaryColor else themeColor )
@@ -213,5 +214,3 @@ fun phoneNavigateModuleSite(){
 //#####################################################################################################################
 val darkTheme =    darkColors(background = Color(7,7,7), primary = Color.White, secondary =Color(246, 0, 123)
 , onPrimary = Color(169,11,238))
-
-

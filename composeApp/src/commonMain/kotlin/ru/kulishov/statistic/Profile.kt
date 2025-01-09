@@ -46,6 +46,10 @@ var listFriendThree by mutableStateOf( emptyList<Three>())
 var topActive by  mutableStateOf(0)
 var topActiveBody by  mutableStateOf(Top(-1,"","","", UserTop(-1,0), emptyList()))
 
+
+var awardActive by  mutableStateOf(0)
+var awardActiveBody by  mutableStateOf (UserAwardList(-1,"","","",-1, emptyList(), listOf(-1)))
+
 var sigType by mutableStateOf(1)
 
 var updateProfile by mutableStateOf(false)
@@ -581,6 +585,8 @@ fun ExpandedProfile(key:String){
 
             listMyThree= emptyList()
             listFriendThree = emptyList()
+
+
             for(x in userTek.myTop){
                 server.getTop(x, onSuccess ={
                         res-> listMyTop+=res
@@ -591,6 +597,20 @@ fun ExpandedProfile(key:String){
             for(x in userTek.inTop){
                 server.getTop(x, onSuccess ={
                         res-> listFriendTop+=res
+                }, onFailure = {
+                        res-> println(res)
+                })
+            }
+            for(x in userTek.myAward){
+                server.getAwardList(x, onSuccess ={
+                        res-> listMyAward+=res
+                }, onFailure = {
+                        res-> println(res)
+                })
+            }
+            for(x in userTek.inAward){
+                server.getAwardList(x, onSuccess ={
+                        res-> listFriendAward+=res
                 }, onFailure = {
                         res-> println(res)
                 })
@@ -774,13 +794,33 @@ fun ExpandedProfile(key:String){
 
                     LazyRow(Modifier.padding(start=100.dp, top=80.dp)) {
                         if(whoami.myAward!=null) {
-                            items(listMyAward) { myTop ->
-                                gameItemDesktop(myTop.name,myTop.description, darkTheme.onPrimary)
+                            items(listMyAward) { myAward ->
+                                Box(Modifier.padding(end=25.dp).clickable {
+                                    awardActive=myAward.id
+                                    awardActiveBody = myAward
+                                    state = 21
+                                }) {
+                                    gameItemDesktop(
+                                        myAward.name,
+                                        myAward.description,
+                                        darkTheme.onPrimary
+                                    )
+                                }
                             }
                         }
                         if(whoami.inAward!=null) {
-                            items(listFriendAward) { intop ->
-                                gameItemDesktop(intop.name,intop.description, Color(122,122,122))
+                            items(listFriendAward) { inAward ->
+                                Box(Modifier.padding(end=25.dp).clickable {
+                                    awardActive=inAward.id
+                                    awardActiveBody = inAward
+                                    state = 21
+                                }) {
+                                    gameItemDesktop(
+                                        inAward.name,
+                                        inAward.description,
+                                        Color(122, 122, 122)
+                                    )
+                                }
                             }
                         }
                         item {
@@ -788,7 +828,30 @@ fun ExpandedProfile(key:String){
                                 darkTheme.secondary.red, darkTheme.secondary.green, darkTheme.secondary.blue,
                                 alpha = 0.5f
                             )
-                            Box(Modifier.width(400.dp).height(200.dp).background(nC, shape = RoundedCornerShape(10)),
+                            Box(Modifier.padding(end=25.dp).width(400.dp).height(200.dp).background(nC, shape = RoundedCornerShape(10))
+                                .clickable {
+                                    sigType=2
+                                    signState=true
+                                },
+                                contentAlignment = Alignment.Center){
+                                Text("sign in", style = TextStyle(
+                                    fontSize = 36.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color =  darkTheme.primary
+                                )
+                                )
+                            }
+                        }
+                        item {
+                            val nC = Color(
+                                darkTheme.secondary.red, darkTheme.secondary.green, darkTheme.secondary.blue,
+                                alpha = 0.5f
+                            )
+                            Box(Modifier.padding(end=25.dp).width(400.dp).height(200.dp).background(nC, shape = RoundedCornerShape(10))
+                                .clickable {
+                                    sigType=2
+                                    createWindow=true
+                                },
                                 contentAlignment = Alignment.Center){
                                 Text("Add", style = TextStyle(
                                     fontSize = 36.sp,
@@ -799,6 +862,7 @@ fun ExpandedProfile(key:String){
                             }
                         }
                     }
+
 
                 }
             }

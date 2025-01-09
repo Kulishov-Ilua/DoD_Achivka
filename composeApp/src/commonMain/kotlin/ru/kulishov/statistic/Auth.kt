@@ -81,6 +81,22 @@ fun bigAuthBlock(backgroundColor:Color,primaryColor:Color,themeColor:Color,secon
                             res-> println(res)
                     })
                 }
+                println(userTek)
+                for(x in userTek.myAward){
+                    server.getAwardList(x, onSuccess ={
+                            res-> listMyAward+=res
+                    }, onFailure = {
+                            res-> println(res)
+                    })
+                }
+                for(x in userTek.inAward){
+                    server.getAwardList(x, onSuccess ={
+                            res-> listFriendAward+=res
+                    }, onFailure = {
+                            res-> println(res)
+                    })
+                }
+
                 flag=false
                 state =1
             }

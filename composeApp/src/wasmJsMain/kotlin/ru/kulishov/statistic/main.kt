@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.ComposeViewport
 import kotlinx.browser.document
 import kotlinx.browser.window
+import kotlinx.coroutines.launch
 
 
 enum class WindowSizeClass { Compact, Medium, Expanded }
@@ -86,20 +87,115 @@ fun main() {
     ComposeViewport(document.body!!) {
         var whoami by remember { mutableStateOf(WhoamiRequest("",1,1, emptyList(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList())) }
 
-        val client by remember { mutableStateOf( Reuests()) } // Создаем или используем уже существующий клиент
 
         val userAgent = window.navigator.userAgent.lowercase()
         if(userAgent.contains("mobile")||userAgent.contains("android")||userAgent.contains("iphone")){
-            compactSite()
+
         }else{
-            if(state==-1) authScreenDesktop(darkTheme.background, darkTheme.primary, darkTheme.secondary,
-                Color(32,32,32))
-            if(state==1) ExpandedProfile(key)
-            if(state==11) topScreenDesktop(
-                topActive,darkTheme.background, darkTheme.primary, darkTheme.secondary,Color(32,32,32),
-                darkTheme.onPrimary)
+            when(state){
+                -1 -> authScreenDesktop(
+                    darkTheme.background, darkTheme.primary, darkTheme.secondary,
+                    Color(32,32,32))
+                1 -> ExpandedProfile(key)
+                11 -> {
+                    var viewInt by remember { mutableStateOf(false) }
+                    LaunchedEffect(true){
+                        launch {
+                            var flagId = false
+                            usersSort = emptyList()
+                            userTopList = emptyList()
+                            toptrunList = emptyList()
+                            usernames = emptyList()
+                            val server = Reuests()
+                            server.getTop(topActive, onSuccess = { res ->
+                                top = res
+                                if (top.id != -1) flagId = true
+                            }, onFailure = { res ->
+                                println(res)
+                            })
+                            println("top: $top")
+
+                            if (flagId) {
+
+                                for (x in top.users) {
+                                    if (userTopList.find { cr -> cr == x.user } == null) {
+                                        userTopList += x.user
+                                    }
+                                }
+                                server.getUsernameList(userTopList,
+                                    onFailure = { res ->
+                                        println(res)
+                                    },
+                                    onSuccess = { res ->
+                                        usernames = res
+                                    })
+                                println(usernames)
+                            }
+                            usersSort = top.users
+                            usersSort = usersSort.sortedBy { cr -> (cr.value * -1) }
+                            var count = 0
+                            for (x in usersSort) {
+                                count++
+                                val name = usernames.find { cr -> cr.userId == x.user }
+                                if (toptrunList.find { cr ->
+                                        cr == toptrun(
+                                            x.user,
+                                            name!!.username,
+                                            name!!.sex,
+                                            count,
+                                            x.value
+                                        )
+                                    } == null) {
+                                    toptrunList += toptrun(
+                                        x.user,
+                                        name!!.username,
+                                        name!!.sex,
+                                        count,
+                                        x.value
+                                    )
+                                }
+
+                            }
+                            isAdmin = server.checkAdminTop(topActive)
+                            println("admin: $isAdmin")
+                            viewInt=true
+
+                        }
+                    }
+                    when(viewInt){
+                        true -> {
+                            topScreenDesktop(
+                                topActive,
+                                darkTheme.background,
+                                darkTheme.primary,
+                                darkTheme.secondary,
+                                Color(32, 32, 32),
+                                darkTheme.onPrimary
+                            )
+                        }
+                        false->{
+                            topScreenDesktop(
+                                topActive,
+                                darkTheme.background,
+                                darkTheme.primary,
+                                darkTheme.secondary,
+                                Color(32, 32, 32),
+                                darkTheme.onPrimary
+                            )
+                        }
+                    }
+
+                }
+                21 ->{
+                    awardsScreen(awardActive, 1,darkTheme.background, darkTheme.primary, darkTheme.secondary,
+                        Color(32,32,32),
+                        darkTheme.onPrimary)
+                }
+
+            }
         }
     }
+
 }
 
 @Composable

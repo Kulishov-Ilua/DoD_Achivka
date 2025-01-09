@@ -22,6 +22,11 @@ fun main() = application {
                     Color(32,32,32),
                     darkTheme.onPrimary)
             }
+            21 ->{
+                awardsScreen(awardActive, 1,darkTheme.background, darkTheme.primary, darkTheme.secondary,
+                    Color(32,32,32),
+                    darkTheme.onPrimary)
+            }
 
         }
 

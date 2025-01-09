@@ -91,14 +91,17 @@ fun topScreenPhone(){
 //              defaultColor:Color - default color
 //              secondColor:Color - second color
 //=====================================================================================
+var userTopList by    mutableStateOf( emptyList<Int>())
+var usernames by  mutableStateOf(emptyList<Username>())
+var toptrunList by  mutableStateOf(emptyList<toptrun>())
+var usersSort by  mutableStateOf(emptyList<UserTop>())
+var isAdmin by  mutableStateOf(false)
+var top by   mutableStateOf( Top(-1,"","","", UserTop(-1,0), emptyList()))
+
+
 @Composable
 fun topScreenDesktop( topId:Int,backgroundColor: Color,primaryColor:Color,themeColor:Color, defaultColor:Color, secondColor:Color){
-    var top by remember {  mutableStateOf( Top(-1,"","","", UserTop(-1,0), emptyList()))}
-    var userTopList by remember {  mutableStateOf( emptyList<Int>())}
-    var usernames by remember { mutableStateOf(emptyList<Username>()) }
-    var toptrunList by remember { mutableStateOf(emptyList<toptrun>()) }
-    var usersSort by remember { mutableStateOf(emptyList<UserTop>()) }
-    var isAdmin by remember { mutableStateOf(false) }
+
 
     val scope = rememberCoroutineScope()
     if(updateTop==1){
@@ -258,7 +261,7 @@ fun topScreenDesktop( topId:Int,backgroundColor: Color,primaryColor:Color,themeC
             if (inventCardView) {
                 userCardView = false
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    bigUnventCardTop(key, top.id, Color(32, 32, 32), primaryColor)
+                    bigUnventCardTop(1, top.id, Color(32, 32, 32), primaryColor)
                 }
             }
 
@@ -678,13 +681,13 @@ fun bigUserCardTop(user:toptrun,topId:Int, backgroundColor:Color, primaryColor:C
                         userCardView=false
                         onSave()
                     },
-                    contentAlignment = Alignment.Center){
-                    Text("Сохранить", style = TextStyle(
+                    contentAlignment = Alignment.Center){Text("Сохранить", style = TextStyle(
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color=primaryColor
                     )
                     )
+
                 }
             }
         }
@@ -710,14 +713,22 @@ fun bigUserCardTop(user:toptrun,topId:Int, backgroundColor:Color, primaryColor:C
 //              primaryColor:Color - primary color
 //=====================================================================================
 @Composable
-fun bigUnventCardTop(key:String,topId:Int, backgroundColor:Color, primaryColor:Color){
+fun bigUnventCardTop(key:Int,topId:Int, backgroundColor:Color, primaryColor:Color){
     var token by remember { mutableStateOf("") }
     var updatetoken by remember { mutableStateOf(true) }
     val server = Reuests()
     val scope = rememberCoroutineScope()
     if(updatetoken) {
         scope.launch {
-            token=server.getTopToken(topId)
+            when(key){
+                1->{
+                    token=server.getTopToken(topId)
+                }
+                2->{
+                    token = server.getAwardToken(topId)
+                }
+            }
+
             updatetoken=false
         }
     }
@@ -796,7 +807,15 @@ fun bigSignCard(type:Int, backgroundColor:Color, primaryColor:Color){
     val scope = rememberCoroutineScope()
     if(updatetoken) {
         scope.launch {
-            isError = server.signTop(token)
+            when(sigType){
+                1->{
+                    isError = server.signTop(token)
+                }
+                2->{
+                    isError = server.signAward(token)
+                }
+            }
+
             if(!isError) signState=false
             updateProfile=true
             updatetoken=false
@@ -875,7 +894,7 @@ fun bigSignCard(type:Int, backgroundColor:Color, primaryColor:Color){
             .fillMaxSize()
             , contentAlignment = Alignment.TopEnd
         ){
-            Icon(painterResource(Res.drawable.topinvent), contentDescription = null,
+            Icon(painterResource(Res.drawable.exit), contentDescription = null,
                 tint = primaryColor, modifier = Modifier.clickable {
                     signState=false
                 })
@@ -903,8 +922,17 @@ fun createGameItembig(type:Int, backgroundColor:Color, primaryColor:Color){
             if(name=="") isErrorName=true
             else{
                 isErrorName=false
-                if(server.createTop(name,description)==true){
-                    createWindow=false
+                when(sigType){
+                    1->{
+                        if(server.createTop(name,description)==true){
+                            createWindow=false
+                        }
+                    }
+                    2->{
+                        if(server.createAwardList(name,description)==true){
+                            createWindow=false
+                        }
+                    }
                 }
                 updateProfile=true
                 updatetoken=false

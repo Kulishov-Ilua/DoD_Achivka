@@ -22,7 +22,7 @@ import kotlin.text.Charsets.UTF_8
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @Serializable
 data class User(val userId:Int, val token:String, val plan:Int, val myThree:List<Int>, val inThree:List<Int>,
-                var myTop:List<Int>, var inTop:List<Int>, var myAward:List<Int>, val inAward:List<Int>)
+                var myTop:List<Int>, var inTop:List<Int>, var myAward:List<Int>, var inAward:List<Int>)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //Username
@@ -97,8 +97,11 @@ data class UserTop(val user:Int, var value:Int)
 //              userActive:List<BigInteger> - users
 //              status:Bool - status
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-data class Award(val awardId:Int/*, val imagePassiveId: ContentType.Image, val imageActiveId: ContentType.Image*/, val userActive:List<BigInteger>, var status:Boolean)
+@Serializable
+data class Award(val awardId:Int, val name:String,
+                 val description: String="",
+                 var userActive:List<Int>?,
+                 var status:Boolean=false)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //UserAwardList
@@ -110,8 +113,9 @@ data class Award(val awardId:Int/*, val imagePassiveId: ContentType.Image, val i
 //              awardList:List<Award> - award list
 //              users:List<BigInteger> - users
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-data class UserAwardList(val id:Int,val token:String, val name:String, val description:String,val admin:Int,val awardList:List<Award>,val users:List<BigInteger>)
+@Serializable
+data class UserAwardList(val id:Int, var token:String, val name:String, val description:String, val admin:Int, var awardList:List<Award>?,
+                         var users:List<Int>)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //Three
@@ -153,7 +157,7 @@ var usernameList = listOf(Username(0,1,"Ivanov I.I."),
     Username(9,2,"Karenina A.A."),)
 
 var userList = listOf(User(0,"qqq",3,  emptyList(), emptyList(),listOf(0), emptyList(),
-    emptyList(), emptyList()),
+    listOf(0), emptyList()),
     User(1,"qq1",1, emptyList(), emptyList(), emptyList(),listOf(0), emptyList(),
         emptyList()),
     User(2,"qq2",1, emptyList(), emptyList(), emptyList(),listOf(0), emptyList(),
@@ -176,7 +180,15 @@ var userList = listOf(User(0,"qqq",3,  emptyList(), emptyList(),listOf(0), empty
 
 var threeList = emptyList<Three>()
 
-var awardList = emptyList<UserAwardList>()
+var awardList = listOf<UserAwardList>(
+    UserAwardList(0,"sfsfsd","test award list","",0, listOf(
+        Award(0,"first","", listOf(0),false),
+        Award(1,"second","", emptyList(),false),
+    ), listOf(
+        0
+    )
+    )
+)
 
 var topList = listOf(Top(0,"Test top", "просто какое-то описание топа. Что-то же нужно написать","sjklfjsklj943ls", UserTop(0,0), listOf(
     UserTop(1, 999),
